@@ -5,6 +5,10 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    # server.ts импортирует src/server/ws-handler через tsx — пробрасываем
+    # исходник напрямую, чтобы обновления не требовали rebuild
+    volumes:
+      - ./src/server:/app/src/server:ro
     ports:
       - "3000:3000"
     restart: unless-stopped
@@ -16,8 +20,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-    ports:
-      - "5432:5432"
+    # ВНИМАНИЕ: 5432 НЕ публикуется в прод — добавьте port mapping
+    # через docker-compose.override.yml при локальной разработке.
     volumes:
       - pg-data:/var/lib/postgresql/data
     healthcheck:

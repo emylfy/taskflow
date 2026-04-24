@@ -1,0 +1,6 @@
+# Dev-override: автоматически подхватывается `docker compose up` только
+# если файл существует. В production удалите или переименуйте.
+services:
+  db:
+    ports:
+      - "5432:5432"

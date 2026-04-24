@@ -26,21 +26,30 @@ const NavItem: React.FC<NavItemProps> = ({ icon, label, active, badge, href = '#
   </Link>
 );
 
-type SidebarProps = { active?: NavKey; org?: string };
+type SidebarProps = {
+  active?: NavKey;
+  org?: string;
+  orgName?: string;
+  isAuthed?: boolean;
+};
 
 export const Sidebar: React.FC<SidebarProps> = ({
   active = 'projects',
-  org = 'Команда TaskFlow',
-}) => (
+  org,
+  orgName = 'Команда TaskFlow',
+  isAuthed = true,
+}) => {
+  const displayOrg = org ?? orgName;
+  return (
   <aside className={styles.sidebar}>
     <div className={styles.logoBlock}>
       <Logo size={18} />
     </div>
 
     <div className={styles.org}>
-      <div className={styles.orgIcon}>КТ</div>
+      <div className={styles.orgIcon}>{displayOrg.split(' ').map((s) => s[0]).slice(0, 2).join('').toUpperCase()}</div>
       <div className={styles.orgText}>
-        <div className={styles.orgName}>{org}</div>
+        <div className={styles.orgName}>{displayOrg}</div>
         <div className={styles.orgRole}>Организация · Бизнес</div>
       </div>
       <I.ChevronDown size={14} stroke="#8B939C" />
@@ -73,10 +82,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
     </div>
 
-    <form action={logoutDemo} className={styles.logoutForm}>
-      <button type="submit" className={styles.logoutBtn}>Выйти</button>
-    </form>
+    {isAuthed && (
+      <form action={logoutDemo} className={styles.logoutForm}>
+        <button type="submit" className={styles.logoutBtn}>Выйти</button>
+      </form>
+    )}
   </aside>
-);
+  );
+};
 
 export default Sidebar;
