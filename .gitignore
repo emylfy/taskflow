@@ -14,5 +14,7 @@ coverage/
 
 next-env.d.ts
 prisma/migrations/.migrate.lock
+tsconfig.tsbuildinfo
+*.tsbuildinfo
 
 backups/
