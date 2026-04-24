@@ -262,27 +262,21 @@ export default function LandingPage() {
       </section>
 
       <footer className={styles.footer}>
-        <div className={styles.footerCol}>
-          <Logo size={18} />
-          <div className={styles.footerCopy}>© 2026 TaskFlow. Все права защищены.</div>
-        </div>
-        <div className={styles.footerCol}>
-          <div className={styles.footerTitle}>Продукт</div>
-          Возможности<br />
-          Тарифы<br />
-          Обновления
-        </div>
-        <div className={styles.footerCol}>
-          <div className={styles.footerTitle}>Компания</div>
-          О нас<br />
-          Блог<br />
-          Контакты
-        </div>
-        <div className={styles.footerCol}>
-          <div className={styles.footerTitle}>Правовое</div>
-          152-ФЗ<br />
-          Договор-оферта<br />
-          Политика персональных данных
+        <div className={styles.footerInner}>
+          <div className={styles.footerBrand}>
+            <Logo size={18} />
+            <span className={styles.footerCopy}>© 2026 TaskFlow. Все права защищены.</span>
+          </div>
+          <nav className={styles.footerNav}>
+            <a href="#">Политика персональных данных</a>
+            <span className={styles.footerSep}>·</span>
+            <a href="#">Договор-оферта</a>
+            <span className={styles.footerSep}>·</span>
+            <a href="#">152-ФЗ</a>
+            <span className={styles.footerSep}>·</span>
+            <a href="mailto:support@taskflow.ru">Поддержка</a>
+          </nav>
+          <div className={styles.footerRegion}>Данные в РФ</div>
         </div>
       </footer>
     </div>
