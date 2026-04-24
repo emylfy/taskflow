@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { I } from '@/components/icons/Icons';
 import { Logo } from '@/components/ui/Logo';
 import { ProjectIcon } from '@/components/ui/ProjectIcon';
+import { logoutDemo } from '@/server/actions/demo';
 import styles from './Sidebar.module.css';
 
 type NavKey = 'projects' | 'mytasks' | 'notifications' | 'chat' | 'settings';
@@ -71,6 +72,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className={styles.storageFill} style={{ width: '16%' }} />
       </div>
     </div>
+
+    <form action={logoutDemo} className={styles.logoutForm}>
+      <button type="submit" className={styles.logoutBtn}>Выйти</button>
+    </form>
   </aside>
 );
 

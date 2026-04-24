@@ -87,9 +87,11 @@ export default async function ProjectsPage() {
           <Button variant="secondary" leading={<I.Grid size={15} stroke="#5B6670" />}>
             Сетка
           </Button>
-          <Button variant="primary" leading={<I.Plus size={15} stroke="#fff" />}>
-            Новый проект
-          </Button>
+          <Link href="/projects/new">
+            <Button variant="primary" leading={<I.Plus size={15} stroke="#fff" />}>
+              Новый проект
+            </Button>
+          </Link>
         </div>
       </div>
 

@@ -191,3 +191,25 @@
   height: 100%;
   background: var(--accent);
 }
+
+.logoutForm {
+  margin-top: 10px;
+}
+
+.logoutBtn {
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--r-btn);
+  color: var(--text-2);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 120ms ease, color 120ms ease;
+}
+
+.logoutBtn:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}

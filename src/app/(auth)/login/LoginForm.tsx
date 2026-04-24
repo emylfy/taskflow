@@ -5,9 +5,18 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { I } from '@/components/icons/Icons';
 import { signIn } from '@/lib/auth-client';
+import { loginAsDemo } from '@/server/actions/demo';
 import styles from '../auth.module.css';
 
-export function LoginForm() {
+const DEMO_USERS = [
+  { email: 'ivan.sokolov@taskflow.ru', name: 'Иван Соколов', role: 'Владелец' },
+  { email: 'maria.petrova@taskflow.ru', name: 'Мария Петрова', role: 'Администратор' },
+  { email: 'sergey.nikolaev@taskflow.ru', name: 'Сергей Николаев', role: 'Участник' },
+];
+
+type Props = { demoEnabled: boolean };
+
+export function LoginForm({ demoEnabled }: Props) {
   const [email, setEmail] = React.useState('');
   const [status, setStatus] = React.useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [error, setError] = React.useState<string | null>(null);
@@ -64,7 +73,7 @@ export function LoginForm() {
       <Input
         label="Адрес электронной почты"
         type="email"
-        placeholder="ivan.sokolov@kontur-dg.ru"
+        placeholder="ivan.sokolov@taskflow.ru"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         leading={<I.Mail size={16} stroke="#8B939C" />}
@@ -80,6 +89,34 @@ export function LoginForm() {
         {status === 'sent' ? 'Ссылка отправлена, проверьте почту' : 'Получить ссылку для входа'}
       </Button>
       {error && <div className={styles.error}>{error}</div>}
+
+      {demoEnabled && (
+        <>
+          <div className={styles.divider}>
+            <span />
+            демо-режим
+            <span />
+          </div>
+          <div className={styles.demoHint}>
+            Быстрый вход без почты и OAuth для демонстрации. Доступен, пока в окружении задан{' '}
+            <code>DEMO_MODE=true</code>.
+          </div>
+          <div className={styles.demoList}>
+            {DEMO_USERS.map((u) => (
+              <form key={u.email} action={loginAsDemo.bind(null, u.email)}>
+                <button type="submit" className={styles.demoRow}>
+                  <span className={styles.demoAvatar}>{u.name.split(' ').map((s) => s[0]).join('')}</span>
+                  <span className={styles.demoInfo}>
+                    <span className={styles.demoName}>{u.name}</span>
+                    <span className={styles.demoRole}>{u.role}</span>
+                  </span>
+                  <I.ArrowRight size={14} stroke="#8B939C" />
+                </button>
+              </form>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -22,7 +22,7 @@ import { Chip } from '@/components/ui/Badge';
 import { Tabs } from '@/components/ui/Tabs';
 import { Column, type ColumnData } from './Column';
 import { TaskCard, type TaskCardData } from './TaskCard';
-import { moveTask } from '@/server/actions/tasks';
+import { moveTask, createTask } from '@/server/actions/tasks';
 import styles from './Board.module.css';
 
 type BoardProps = {
@@ -128,7 +128,21 @@ export const Board: React.FC<BoardProps> = ({
           <div style={{ flex: 1 }} />
           <AvatarStack names={members} size={28} max={4} />
           <div className={styles.vsep} />
-          <Button variant="secondary" size="sm" leading={<I.Plus size={14} stroke="#5B6670" />}>
+          <Button
+            variant="secondary"
+            size="sm"
+            leading={<I.Plus size={14} stroke="#5B6670" />}
+            onClick={async () => {
+              const title = window.prompt('Название новой задачи');
+              if (!title || !title.trim()) return;
+              try {
+                await createTask({ projectId, title: title.trim(), status: 'TODO' });
+                router.refresh();
+              } catch (e) {
+                alert((e as Error).message);
+              }
+            }}
+          >
             Добавить задачу
           </Button>
         </div>

@@ -2,10 +2,18 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.wrap:hover .text {
+  color: var(--accent);
 }
 
 .text {
   font-weight: 700;
   letter-spacing: -0.3px;
   color: var(--text);
+  transition: color 120ms ease;
 }

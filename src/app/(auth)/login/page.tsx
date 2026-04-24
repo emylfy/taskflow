@@ -6,6 +6,8 @@ import styles from '../auth.module.css';
 
 export const metadata = { title: 'Вход — TaskFlow' };
 
+const demoEnabled = process.env.DEMO_MODE === 'true';
+
 export default function LoginPage() {
   return (
     <div className={styles.page}>
@@ -21,7 +23,7 @@ export default function LoginPage() {
             <h1>Вход в TaskFlow</h1>
             <p>Войдите в свою организацию</p>
           </div>
-          <LoginForm />
+          <LoginForm demoEnabled={demoEnabled} />
           <div className={styles.alt}>
             Нет организации?{' '}
             <Link href="/register" className={styles.link}>

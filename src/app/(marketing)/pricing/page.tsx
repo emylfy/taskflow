@@ -17,9 +17,7 @@ export default function PricingPage() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <Link href="/">
-          <Logo size={20} />
-        </Link>
+        <Logo size={20} />
         <div style={{ flex: 1 }} />
         <Link href="/login">
           <Button variant="ghost" size="sm">
