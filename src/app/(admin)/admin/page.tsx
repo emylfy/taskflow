@@ -1,8 +1,6 @@
 import * as React from 'react';
 import { I } from '@/components/icons/Icons';
 import { Avatar } from '@/components/ui/Avatar';
-import { Sidebar } from '@/components/nav/Sidebar';
-import { TopBar } from '@/components/nav/TopBar';
 import styles from './admin.module.css';
 
 export const metadata = { title: 'Администрирование — TaskFlow' };
@@ -24,11 +22,7 @@ export default function AdminDashboardPage() {
   const pts = DAYS.map((v, i) => `${(i / (DAYS.length - 1)) * 100},${100 - ((v - mn) / (mx - mn)) * 90 - 5}`).join(' ');
 
   return (
-    <div className={styles.wrap}>
-      <Sidebar active="settings" />
-      <div className={styles.column}>
-        <TopBar title="Администрирование" />
-        <main className={styles.main}>
+    <div className={styles.main}>
           <h1>Администрирование TaskFlow</h1>
           <p className={styles.lead}>Организация «Команда TaskFlow» · Тариф «Команда» · Продлён до 30 мая 2026</p>
 
@@ -102,8 +96,6 @@ export default function AdminDashboardPage() {
               </div>
             </section>
           </div>
-        </main>
-      </div>
     </div>
   );
 }

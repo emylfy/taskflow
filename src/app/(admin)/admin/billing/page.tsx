@@ -1,7 +1,5 @@
 import * as React from 'react';
 import { I } from '@/components/icons/Icons';
-import { Sidebar } from '@/components/nav/Sidebar';
-import { TopBar } from '@/components/nav/TopBar';
 import { Button } from '@/components/ui/Button';
 import styles from './billing.module.css';
 
@@ -58,11 +56,7 @@ const METHODS = [
 
 export default function BillingPage() {
   return (
-    <div className={styles.wrap}>
-      <Sidebar active="settings" />
-      <div className={styles.column}>
-        <TopBar title="Тарифы" />
-        <main className={styles.main}>
+    <div className={styles.main}>
           <div className={styles.plans}>
             <h1>Тарифы</h1>
             <p>Выберите тариф, который подходит вашей команде. Оплата в рублях через ЮKassa.</p>
@@ -153,8 +147,6 @@ export default function BillingPage() {
               </div>
             </div>
           </aside>
-        </main>
-      </div>
     </div>
   );
 }

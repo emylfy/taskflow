@@ -1,7 +1,5 @@
 import * as React from 'react';
 import { I } from '@/components/icons/Icons';
-import { Sidebar } from '@/components/nav/Sidebar';
-import { TopBar } from '@/components/nav/TopBar';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import styles from './members.module.css';
@@ -31,11 +29,7 @@ const MEMBERS: Member[] = [
 
 export default function MembersPage() {
   return (
-    <div className={styles.wrap}>
-      <Sidebar active="settings" />
-      <div className={styles.column}>
-        <TopBar title="Участники" />
-        <main className={styles.main}>
+    <div className={styles.main}>
           <div className={styles.head}>
             <div>
               <h1>Участники и подписка</h1>
@@ -85,8 +79,6 @@ export default function MembersPage() {
               </div>
             ))}
           </div>
-        </main>
-      </div>
     </div>
   );
 }
