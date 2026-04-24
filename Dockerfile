@@ -25,6 +25,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nextjs:nodejs /app/server.ts ./server.ts
+# server.ts импортирует src/server/ws-handler.ts через tsx при старте
+COPY --from=builder --chown=nextjs:nodejs /app/src/server ./src/server
+COPY --from=builder --chown=nextjs:nodejs /app/tsconfig.json ./tsconfig.json
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
 COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
 USER nextjs
