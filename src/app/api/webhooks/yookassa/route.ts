@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyWebhookSignature } from '@/lib/yookassa';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 type YooNotification = {
   type: string;
   event: string;
