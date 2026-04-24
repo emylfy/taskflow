@@ -1,0 +1,299 @@
+.wrap {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+}
+
+.column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  overflow: auto;
+}
+
+.plans {
+  flex: 1;
+  padding: 28px 32px;
+  min-width: 0;
+  max-width: 900px;
+}
+
+.plans h1 {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  margin: 0 0 6px;
+}
+
+.plans p {
+  font-size: 13px;
+  color: var(--text-2);
+  margin: 0 0 22px;
+}
+
+.plansGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.plan {
+  position: relative;
+  padding: 24px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-sm);
+}
+
+.planFeatured {
+  border-color: var(--accent);
+  box-shadow: 0 16px 40px rgba(43, 95, 164, 0.16);
+}
+
+.planBadge {
+  position: absolute;
+  top: -10px;
+  left: 20px;
+  padding: 3px 10px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 999px;
+}
+
+.planName {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-2);
+  margin-bottom: 10px;
+}
+
+.planPrice {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.planPriceValue {
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -0.8px;
+}
+
+.planPriceSuffix {
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.planNote {
+  font-size: 12px;
+  color: var(--text-2);
+  margin-bottom: 18px;
+}
+
+.planSep {
+  height: 1px;
+  background: var(--border);
+  margin: 20px 0;
+}
+
+.planFeatures {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.planFeatures li {
+  display: flex;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.45;
+}
+
+.payModal {
+  width: 440px;
+  flex-shrink: 0;
+  background: var(--bg);
+  border-left: 1px solid var(--border);
+  box-shadow: -16px 0 48px rgba(16, 24, 40, 0.12);
+  display: flex;
+  flex-direction: column;
+}
+
+.payHead {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+}
+
+.payTitle {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.payBody {
+  flex: 1;
+  padding: 24px;
+  overflow: auto;
+}
+
+.summary {
+  padding: 16px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  margin-bottom: 20px;
+}
+
+.summaryRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.bold {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.summarySep {
+  height: 1px;
+  background: var(--border);
+  margin: 12px 0;
+}
+
+.summaryTotal {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.total {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--text);
+}
+
+.vat {
+  font-size: 11px;
+  color: var(--text-3);
+  text-align: right;
+  margin-top: 2px;
+}
+
+.methodTitle {
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+
+.methods {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.method {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-btn);
+  background: var(--bg);
+  cursor: pointer;
+}
+
+.methodActive {
+  border-color: var(--accent);
+  background: #F5F9FE;
+}
+
+.radio {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.radioOn {
+  border-color: var(--accent);
+}
+
+.radioDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.methodBadge {
+  width: 34px;
+  height: 22px;
+  border-radius: 4px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.methodInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.methodName {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.methodSub {
+  font-size: 11px;
+  color: var(--text-3);
+  margin-top: 1px;
+}
+
+.secure {
+  margin-top: 18px;
+  padding: 12px 14px;
+  background: var(--panel);
+  border-radius: var(--r-btn);
+  display: flex;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--text-2);
+  line-height: 1.5;
+}
+
+.secure b {
+  color: var(--text);
+}

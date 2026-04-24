@@ -1,0 +1,71 @@
+.column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px 10px;
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.count {
+  font-size: 11px;
+  padding: 1px 7px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-2);
+  font-weight: 600;
+}
+
+.iconBtn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  color: var(--text-3);
+  display: inline-flex;
+}
+
+.dropZone {
+  flex: 1;
+  min-height: 100px;
+  padding: 4px;
+  border-radius: var(--r-card);
+  border: 1px dashed transparent;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.dropOver {
+  background: rgba(43, 95, 164, 0.04);
+  border-color: #B9CCE4;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.empty {
+  padding: 18px;
+  border-radius: var(--r-card);
+  border: 2px dashed #E4E6EA;
+  text-align: center;
+  color: var(--text-3);
+  font-size: 12px;
+}

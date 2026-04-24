@@ -1,0 +1,176 @@
+'use server';
+
+import { revalidatePath } from 'next/cache';
+import { prisma } from '@/lib/prisma';
+import { requireUser } from '@/lib/session';
+import { broadcast } from '@/server/ws-broadcast';
+import type { TaskStatus, Priority } from '@prisma/client';
+
+async function assertProjectAccess(userId: string, projectId: string) {
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    select: { id: true, organizationId: true },
+  });
+  if (!project) throw new Error('Проект не найден');
+  const member = await prisma.member.findUnique({
+    where: {
+      userId_organizationId: { userId, organizationId: project.organizationId },
+    },
+  });
+  if (!member) throw new Error('Нет прав на проект');
+  return { project, member };
+}
+
+export async function createTask(input: {
+  projectId: string;
+  title: string;
+  status?: TaskStatus;
+  priority?: Priority;
+  assigneeId?: string;
+  dueDate?: Date | null;
+}) {
+  const user = await requireUser();
+  const { project } = await assertProjectAccess(user.id, input.projectId);
+
+  const status = input.status ?? 'TODO';
+  const last = await prisma.task.findFirst({
+    where: { projectId: input.projectId, status },
+    orderBy: { orderIndex: 'desc' },
+    select: { orderIndex: true },
+  });
+  const orderIndex = (last?.orderIndex ?? -1) + 1;
+
+  const task = await prisma.task.create({
+    data: {
+      title: input.title,
+      projectId: input.projectId,
+      status,
+      priority: input.priority ?? 'MEDIUM',
+      assigneeId: input.assigneeId,
+      dueDate: input.dueDate ?? null,
+      orderIndex,
+    },
+  });
+
+  await prisma.activityLog.create({
+    data: {
+      organizationId: project.organizationId,
+      actorId: user.id,
+      action: 'task.create',
+      targetType: 'task',
+      targetId: task.id,
+    },
+  });
+
+  broadcast(`project-${input.projectId}`, { type: 'task:created', payload: task });
+  revalidatePath(`/projects/${input.projectId}`);
+  return task;
+}
+
+export async function moveTask(input: {
+  taskId: string;
+  status: TaskStatus;
+  orderIndex: number;
+}) {
+  const user = await requireUser();
+  const task = await prisma.task.findUnique({
+    where: { id: input.taskId },
+    select: { id: true, projectId: true, status: true, orderIndex: true },
+  });
+  if (!task) throw new Error('Задача не найдена');
+  await assertProjectAccess(user.id, task.projectId);
+
+  const updated = await prisma.$transaction(async (tx) => {
+    if (task.status !== input.status) {
+      await tx.task.updateMany({
+        where: { projectId: task.projectId, status: task.status, orderIndex: { gt: task.orderIndex } },
+        data: { orderIndex: { decrement: 1 } },
+      });
+      await tx.task.updateMany({
+        where: { projectId: task.projectId, status: input.status, orderIndex: { gte: input.orderIndex } },
+        data: { orderIndex: { increment: 1 } },
+      });
+    } else {
+      if (input.orderIndex < task.orderIndex) {
+        await tx.task.updateMany({
+          where: {
+            projectId: task.projectId,
+            status: task.status,
+            orderIndex: { gte: input.orderIndex, lt: task.orderIndex },
+          },
+          data: { orderIndex: { increment: 1 } },
+        });
+      } else if (input.orderIndex > task.orderIndex) {
+        await tx.task.updateMany({
+          where: {
+            projectId: task.projectId,
+            status: task.status,
+            orderIndex: { gt: task.orderIndex, lte: input.orderIndex },
+          },
+          data: { orderIndex: { decrement: 1 } },
+        });
+      }
+    }
+
+    return tx.task.update({
+      where: { id: input.taskId },
+      data: { status: input.status, orderIndex: input.orderIndex },
+    });
+  });
+
+  broadcast(`project-${task.projectId}`, { type: 'task:moved', payload: updated });
+  revalidatePath(`/projects/${task.projectId}`);
+  return updated;
+}
+
+export async function updateTask(input: {
+  taskId: string;
+  title?: string;
+  description?: string | null;
+  priority?: Priority;
+  assigneeId?: string | null;
+  dueDate?: Date | null;
+}) {
+  const user = await requireUser();
+  const existing = await prisma.task.findUnique({
+    where: { id: input.taskId },
+    select: { projectId: true },
+  });
+  if (!existing) throw new Error('Задача не найдена');
+  await assertProjectAccess(user.id, existing.projectId);
+
+  const { taskId, ...data } = input;
+  const task = await prisma.task.update({ where: { id: taskId }, data });
+  broadcast(`project-${existing.projectId}`, { type: 'task:updated', payload: task });
+  revalidatePath(`/projects/${existing.projectId}/tasks/${taskId}`);
+  return task;
+}
+
+export async function deleteTask(taskId: string) {
+  const user = await requireUser();
+  const existing = await prisma.task.findUnique({
+    where: { id: taskId },
+    select: { projectId: true },
+  });
+  if (!existing) throw new Error('Задача не найдена');
+  await assertProjectAccess(user.id, existing.projectId);
+  await prisma.task.delete({ where: { id: taskId } });
+  broadcast(`project-${existing.projectId}`, { type: 'task:deleted', payload: { id: taskId } });
+  revalidatePath(`/projects/${existing.projectId}`);
+}
+
+export async function saveYjsSnapshot(taskId: string, snapshot: Uint8Array) {
+  const user = await requireUser();
+  const existing = await prisma.task.findUnique({
+    where: { id: taskId },
+    select: { projectId: true },
+  });
+  if (!existing) throw new Error('Задача не найдена');
+  await assertProjectAccess(user.id, existing.projectId);
+
+  await prisma.yjsSnapshot.upsert({
+    where: { id: taskId },
+    create: { id: taskId, taskId, snapshot: Buffer.from(snapshot) },
+    update: { snapshot: Buffer.from(snapshot) },
+  });
+}

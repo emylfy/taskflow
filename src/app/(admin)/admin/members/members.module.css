@@ -1,0 +1,133 @@
+.wrap {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+}
+
+.column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.main {
+  flex: 1;
+  padding: 28px 32px;
+  overflow: auto;
+}
+
+.head {
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: 22px;
+  gap: 10px;
+}
+
+.head h1 {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  margin: 0;
+}
+
+.sub {
+  font-size: 13px;
+  color: var(--text-2);
+  margin: 4px 0 0;
+}
+
+.table {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  overflow: hidden;
+}
+
+.tableHead {
+  display: grid;
+  grid-template-columns: 2.2fr 1.2fr 1fr 1fr 40px;
+  gap: 14px;
+  padding: 10px 18px;
+  background: var(--panel);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 2.2fr 1.2fr 1fr 1fr 40px;
+  gap: 14px;
+  padding: 14px 18px;
+  border-bottom: 1px solid #F0F1F4;
+  align-items: center;
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.pending {
+  opacity: 0.75;
+}
+
+.memberCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.memberInfo {
+  min-width: 0;
+}
+
+.memberName {
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.badgeYou {
+  font-size: 10px;
+  padding: 1px 6px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+.badgePending {
+  font-size: 10px;
+  padding: 1px 6px;
+  background: var(--s-review-bg);
+  color: #8A6A12;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+.memberEmail {
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.roleChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.cellText {
+  font-size: 13px;
+  color: var(--text-2);
+}

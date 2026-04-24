@@ -1,0 +1,149 @@
+.layout {
+  display: flex;
+  min-height: calc(100vh - 60px);
+  background: var(--bg);
+}
+
+.menu {
+  width: 240px;
+  padding: 28px 16px;
+  border-right: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.menuTitle {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0 12px 8px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--r-btn);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.itemActive {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.main {
+  flex: 1;
+  padding: 32px 40px;
+  overflow: auto;
+}
+
+.maxW {
+  max-width: 640px;
+}
+
+.main h1 {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  margin: 0 0 4px;
+}
+
+.lead {
+  font-size: 13px;
+  color: var(--text-2);
+  margin: 0 0 28px;
+}
+
+.photoCard {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  margin-bottom: 28px;
+}
+
+.photoTitle {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.photoHint {
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.loginCard {
+  margin-top: 22px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-btn);
+  background: var(--panel);
+}
+
+.loginTitle {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.loginRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.radio {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-strong);
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.radioOn {
+  border-color: var(--accent);
+}
+
+.radioDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.loginName {
+  font-weight: 500;
+}
+
+.loginDesc {
+  color: var(--text-2);
+  font-size: 12px;
+}
+
+.saveRow {
+  margin-top: 24px;
+  display: flex;
+  gap: 10px;
+}

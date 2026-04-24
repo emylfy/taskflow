@@ -1,0 +1,111 @@
+.page {
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  padding: 20px 64px;
+  border-bottom: 1px solid var(--border);
+}
+
+.main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 80px 64px 40px;
+  text-align: center;
+}
+
+.main h1 {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  letter-spacing: -0.6px;
+}
+
+.lead {
+  color: var(--text-2);
+  font-size: 15px;
+  margin: 0 0 36px;
+}
+
+.plans {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  text-align: left;
+}
+
+.plan {
+  position: relative;
+  padding: 24px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow-sm);
+}
+
+.planFeatured {
+  border-color: var(--accent);
+  box-shadow: 0 12px 32px rgba(43, 95, 164, 0.12);
+}
+
+.badge {
+  position: absolute;
+  top: -10px;
+  left: 20px;
+  padding: 3px 10px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 999px;
+}
+
+.name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-2);
+  margin-bottom: 10px;
+}
+
+.price {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.priceValue {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -1px;
+}
+
+.priceSuffix {
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.sep {
+  height: 1px;
+  background: var(--border);
+  margin: 20px 0;
+}
+
+.features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.features li {
+  display: flex;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text);
+}

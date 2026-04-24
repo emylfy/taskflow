@@ -1,0 +1,38 @@
+/* TaskFlow design tokens — строго по ТЗ */
+:root {
+  color-scheme: light only;
+  --bg: #FFFFFF;
+  --panel: #F7F8FA;
+  --border: #E4E6EA;
+  --border-strong: #D5D8DE;
+  --text: #1A1D23;
+  --text-2: #5B6670;
+  --text-3: #8B939C;
+  --accent: #2B5FA4;
+  --accent-soft: #E8EEF7;
+  --accent-hover: #244F8B;
+
+  --s-todo: #8B939C;
+  --s-todo-bg: #EEF0F3;
+  --s-doing: #2B5FA4;
+  --s-doing-bg: #E8EEF7;
+  --s-review: #D4A017;
+  --s-review-bg: #FBF3DC;
+  --s-done: #2E7D3E;
+  --s-done-bg: #E4F2E6;
+
+  --danger: #B23A3A;
+  --danger-bg: #F8E4E4;
+
+  --r-card: 8px;
+  --r-btn: 6px;
+  --r-input: 4px;
+
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.04);
+  --shadow-md: 0 4px 12px rgba(16, 24, 40, 0.08);
+  --shadow-lg: 0 12px 32px rgba(16, 24, 40, 0.12);
+
+  --rt-orange: #E8763A;
+  --rt-purple: #7B4FD4;
+  --rt-green: #3FA860;
+}

@@ -1,0 +1,60 @@
+.card {
+  position: relative;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  padding: 12px;
+  box-shadow: var(--shadow-sm);
+  cursor: grab;
+  user-select: none;
+}
+
+.card:active {
+  cursor: grabbing;
+}
+
+.dragging {
+  border-color: var(--accent);
+  box-shadow: 0 12px 28px rgba(43, 95, 164, 0.22), 0 0 0 2px rgba(43, 95, 164, 0.18);
+}
+
+.priorityBar {
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 3px;
+  border-radius: 2px;
+}
+
+.title {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  margin-left: 8px;
+  margin-bottom: 10px;
+}
+
+.tags {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-left: 8px;
+  margin-bottom: 10px;
+}
+
+.foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 8px;
+  font-size: 11px;
+  color: var(--text-2);
+}
+
+.meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}

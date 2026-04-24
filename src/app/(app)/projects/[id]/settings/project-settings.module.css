@@ -1,0 +1,181 @@
+.page {
+  min-height: calc(100vh - 60px);
+  background: var(--bg);
+}
+
+.crumbs {
+  padding: 20px 28px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.crumbPath {
+  font-size: 11px;
+  color: var(--text-2);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.crumbPath a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  margin-top: 2px;
+}
+
+.body {
+  display: flex;
+}
+
+.menu {
+  width: 220px;
+  padding: 18px 14px;
+  border-right: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.itemActive {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.content {
+  flex: 1;
+  padding: 28px 36px;
+  max-width: 700px;
+}
+
+.section { margin-bottom: 22px; }
+
+.section h2 {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.section p {
+  font-size: 13px;
+  color: var(--text-2);
+  margin: 0;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 500;
+  margin: 18px 0 8px;
+}
+
+.icons {
+  display: flex;
+  gap: 8px;
+}
+
+.iconWrap {
+  position: relative;
+}
+
+.iconSelected {
+  position: absolute;
+  inset: -2px;
+  border-radius: 8px;
+  border: 2px solid var(--accent);
+}
+
+.toggles {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 0;
+}
+
+.toggleRow {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid #F0F1F4;
+  font-size: 13px;
+}
+
+.toggleRow:last-child {
+  border-bottom: none;
+}
+
+.toggle {
+  width: 32px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--border-strong);
+  position: relative;
+  transition: background 120ms ease;
+}
+
+.toggleOn {
+  background: var(--accent);
+}
+
+.toggleKnob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  transition: left 120ms ease;
+}
+
+.toggleOn .toggleKnob {
+  left: 16px;
+}
+
+.danger {
+  padding: 20px;
+  border: 1px solid #EBCCCC;
+  border-radius: var(--r-card);
+  background: #FDF7F7;
+  margin-top: 24px;
+}
+
+.dangerTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--danger);
+  margin-bottom: 4px;
+}
+
+.dangerText {
+  font-size: 12px;
+  color: var(--text-2);
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+
+.dangerBtns {
+  display: flex;
+  gap: 10px;
+}
+
+.save {
+  margin-top: 22px;
+  display: flex;
+  gap: 10px;
+}

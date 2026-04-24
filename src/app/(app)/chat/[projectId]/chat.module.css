@@ -1,0 +1,259 @@
+.layout {
+  display: flex;
+  height: calc(100vh - 60px);
+}
+
+.sidePanel {
+  width: 240px;
+  border-right: 1px solid var(--border);
+  background: #FAFBFC;
+  padding: 16px 10px;
+  flex-shrink: 0;
+  overflow: auto;
+}
+
+.projectHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px 14px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 10px;
+}
+
+.projectName {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.projectSub {
+  font-size: 11px;
+  color: var(--text-2);
+}
+
+.groupTitle {
+  padding: 14px 10px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.channel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.channelActive {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.badge {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 9px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.avatarOnline {
+  position: relative;
+}
+
+.online {
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--s-done);
+  border: 1.5px solid #FAFBFC;
+}
+
+.messages {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--bg);
+}
+
+.channelHead {
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.channelName {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.channelMeta {
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.stream {
+  flex: 1;
+  overflow: auto;
+  padding: 10px 0;
+}
+
+.daySep {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-3);
+  padding: 10px 24px 12px;
+  position: relative;
+}
+
+.daySep::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 24px;
+  right: 24px;
+  height: 1px;
+  background: var(--border);
+  z-index: 0;
+}
+
+.daySep span {
+  background: var(--bg);
+  padding: 0 10px;
+  position: relative;
+  z-index: 1;
+}
+
+.msg {
+  display: flex;
+  gap: 12px;
+  padding: 6px 24px;
+}
+
+.msg:hover {
+  background: var(--panel);
+}
+
+.msgBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.msgHead {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.msgWho {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.msgTime {
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+.pinned {
+  font-size: 10px;
+  padding: 1px 6px;
+  background: var(--s-review-bg);
+  color: #8A6A12;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+.msgText {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.55;
+  margin-top: 2px;
+}
+
+.reactions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.reaction {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px;
+  background: var(--accent-soft);
+  border: 1px solid #CFDCEF;
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.thread {
+  margin-top: 6px;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  padding: 4px 10px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.composer {
+  margin: 0 24px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  background: var(--bg);
+}
+
+.composerInput {
+  padding: 10px 14px;
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  min-height: 24px;
+}
+
+.composerToolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border);
+  background: var(--panel);
+}
