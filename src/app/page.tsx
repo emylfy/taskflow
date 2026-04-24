@@ -180,6 +180,54 @@ export default function LandingPage() {
         ))}
       </section>
 
+      <section id="security" className={styles.security}>
+        <div className={styles.sectionHead}>
+          <h2>Безопасность и соответствие 152-ФЗ</h2>
+          <p>Размещение данных в России, шифрование, регулярные резервные копии и аудит действий.</p>
+        </div>
+        <div className={styles.securityGrid}>
+          {[
+            { icon: <I.Shield size={22} />, title: 'Данные в РФ', desc: 'Серверы в Москве, соответствие требованиям 152-ФЗ по хранению персональных данных.' },
+            { icon: <I.Lock size={22} />, title: 'TLS 1.3 на всех каналах', desc: 'Сертификаты Let’s Encrypt, автоматическое продление, шифрование трафика от клиента до базы.' },
+            { icon: <I.Archive size={22} />, title: 'Ежесуточное резервное копирование', desc: 'Ротация копий 7 дней, запуск восстановления — за минуты.' },
+            { icon: <I.Log size={22} />, title: 'Журнал действий', desc: 'Полная история изменений задач, участников и подписок с возможностью экспорта.' },
+          ].map((x) => (
+            <article key={x.title} className={styles.feature}>
+              <div className={styles.featureIcon}>{x.icon}</div>
+              <div className={styles.featureTitle}>{x.title}</div>
+              <div className={styles.featureDesc}>{x.desc}</div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section id="business" className={styles.business}>
+        <div className={styles.businessCard}>
+          <div className={styles.businessInfo}>
+            <div className={styles.businessBadge}>Для бизнеса</div>
+            <h2>TaskFlow Enterprise</h2>
+            <p>
+              Единый вход через корпоративный Яндекс ID или SAML, SLA 99,9 %, персональный менеджер и
+              расширенный журнал действий. Поможем перенести существующие проекты из других систем.
+            </p>
+            <ul className={styles.businessList}>
+              <li><I.Check size={16} stroke="#2E7D3E" />Без ограничений по участникам и проектам</li>
+              <li><I.Check size={16} stroke="#2E7D3E" />Единый вход (SSO) через SAML 2.0</li>
+              <li><I.Check size={16} stroke="#2E7D3E" />Выделенный канал поддержки</li>
+              <li><I.Check size={16} stroke="#2E7D3E" />Закрывающие документы в электронном виде</li>
+            </ul>
+            <div className={styles.businessCta}>
+              <Link href="/register">
+                <Button variant="primary" size="lg">Попробовать Бизнес 14 дней</Button>
+              </Link>
+              <a href="mailto:sales@taskflow.ru">
+                <Button variant="secondary" size="lg">Связаться с отделом продаж</Button>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section id="pricing" className={styles.pricing}>
         <div className={styles.pricingHead}>
           <h2>Прозрачные тарифы</h2>

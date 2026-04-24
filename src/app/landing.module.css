@@ -328,6 +328,144 @@
   color: var(--text);
 }
 
+.security {
+  padding: 80px 64px 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+  background: var(--bg);
+}
+
+.sectionHead {
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+.sectionHead h2 {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  letter-spacing: -0.6px;
+}
+
+.sectionHead p {
+  color: var(--text-2);
+  font-size: 15px;
+  margin: 0;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.securityGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .securityGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.business {
+  padding: 40px 64px 80px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.businessCard {
+  background: linear-gradient(135deg, #1A1D23 0%, #2B5FA4 100%);
+  border-radius: 16px;
+  padding: 64px 72px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(43, 95, 164, 0.25);
+}
+
+.businessCard::before {
+  content: '';
+  position: absolute;
+  top: -20%;
+  right: -10%;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.businessInfo {
+  position: relative;
+  max-width: 600px;
+}
+
+.businessBadge {
+  display: inline-block;
+  padding: 5px 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 18px;
+  backdrop-filter: blur(4px);
+}
+
+.businessInfo h2 {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -0.8px;
+  margin: 0 0 14px;
+  color: #fff;
+}
+
+.businessInfo p {
+  font-size: 16px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0 0 24px;
+}
+
+.businessList {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 28px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 20px;
+}
+
+.businessList li {
+  display: flex;
+  gap: 10px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.92);
+  align-items: center;
+}
+
+.businessCta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.businessCta a {
+  text-decoration: none;
+}
+
+@media (max-width: 700px) {
+  .businessCard {
+    padding: 40px 28px;
+  }
+  .businessInfo h2 {
+    font-size: 28px;
+  }
+  .businessList {
+    grid-template-columns: 1fr;
+  }
+}
+
 .footer {
   padding: 40px 64px 32px;
   border-top: 1px solid var(--border);
