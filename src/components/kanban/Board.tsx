@@ -18,7 +18,7 @@ import { I } from '@/components/icons/Icons';
 import { Button } from '@/components/ui/Button';
 import { ProjectIcon } from '@/components/ui/ProjectIcon';
 import { AvatarStack } from '@/components/ui/AvatarStack';
-import { Chip } from '@/components/ui/Badge';
+import { Chip, PRIO_MAP } from '@/components/ui/Badge';
 import { Tabs } from '@/components/ui/Tabs';
 import { Column, type ColumnData } from './Column';
 import { TaskCard, type TaskCardData } from './TaskCard';
@@ -53,6 +53,10 @@ export const Board: React.FC<BoardProps> = ({
   const [columns, setColumns] = React.useState<ColumnData[]>(initialColumns);
   const [activeTask, setActiveTask] = React.useState<TaskCardData | null>(null);
   const [view, setView] = React.useState<'kanban' | 'list' | 'calendar'>('kanban');
+  const [calMonth, setCalMonth] = React.useState(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), 1);
+  });
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
@@ -112,6 +116,77 @@ export const Board: React.FC<BoardProps> = ({
       console.error('moveTask failed:', err);
       setColumns(initialColumns);
     }
+  }
+
+  function renderCalendar() {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const ymd = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    const byDay = new Map<string, TaskCardData[]>();
+    for (const c of columns) {
+      for (const t of c.tasks) {
+        if (!t.dueDate) continue;
+        const key = ymd(new Date(t.dueDate));
+        if (!byDay.has(key)) byDay.set(key, []);
+        byDay.get(key)!.push(t);
+      }
+    }
+    const offset = (calMonth.getDay() + 6) % 7; // понедельник — первый день
+    const startCell = new Date(calMonth.getFullYear(), calMonth.getMonth(), 1 - offset);
+    const todayKey = ymd(new Date());
+    const weekdays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+    const cells = Array.from({ length: 42 }, (_, i) =>
+      new Date(startCell.getFullYear(), startCell.getMonth(), startCell.getDate() + i),
+    );
+    const navBtn: React.CSSProperties = {
+      minWidth: 32,
+      height: 32,
+      border: '1px solid #D8DCE0',
+      borderRadius: 8,
+      background: '#fff',
+      cursor: 'pointer',
+      fontSize: 15,
+      lineHeight: 1,
+    };
+    return (
+      <div className={styles.board} style={{ padding: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+          <button type="button" style={navBtn} aria-label="Предыдущий месяц"
+            onClick={() => setCalMonth(new Date(calMonth.getFullYear(), calMonth.getMonth() - 1, 1))}>‹</button>
+          <div style={{ fontWeight: 600, minWidth: 170, textTransform: 'capitalize' }}>
+            {calMonth.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' })}
+          </div>
+          <button type="button" style={navBtn} aria-label="Следующий месяц"
+            onClick={() => setCalMonth(new Date(calMonth.getFullYear(), calMonth.getMonth() + 1, 1))}>›</button>
+          <button type="button" style={{ ...navBtn, padding: '0 12px' }}
+            onClick={() => { const d = new Date(); setCalMonth(new Date(d.getFullYear(), d.getMonth(), 1)); }}>Сегодня</button>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 1, background: '#E8EAEC', border: '1px solid #E8EAEC', borderRadius: 8, overflow: 'hidden' }}>
+          {weekdays.map((w) => (
+            <div key={w} style={{ background: '#F7F8FA', padding: '6px 8px', fontSize: 12, fontWeight: 600, color: '#5B6670', textAlign: 'center' }}>{w}</div>
+          ))}
+          {cells.map((d, i) => {
+            const key = ymd(d);
+            const inMonth = d.getMonth() === calMonth.getMonth();
+            const dayTasks = byDay.get(key) ?? [];
+            return (
+              <div key={i} style={{ background: '#fff', minHeight: 92, padding: 6, opacity: inMonth ? 1 : 0.4 }}>
+                <div style={{ fontSize: 12, fontWeight: key === todayKey ? 700 : 500, color: key === todayKey ? '#2B5FA4' : '#1A1D23', marginBottom: 4 }}>{d.getDate()}</div>
+                {dayTasks.slice(0, 3).map((t) => (
+                  <Link key={t.id} href={`/projects/${projectId}/tasks/${t.id}`}
+                    style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#1A1D23', textDecoration: 'none', padding: '2px 4px', borderRadius: 4, background: '#F2F4F6', marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden' }}>
+                    <span style={{ width: 6, height: 6, borderRadius: 3, background: PRIO_MAP[t.priority].color, flexShrink: 0 }} />
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.title}</span>
+                  </Link>
+                ))}
+                {dayTasks.length > 3 && (
+                  <div style={{ fontSize: 11, color: '#8B939C' }}>+{dayTasks.length - 3}</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -251,9 +326,7 @@ export const Board: React.FC<BoardProps> = ({
           ))}
         </div>
       ) : (
-        <div className={styles.placeholder}>
-          Календарный вид появится в следующей версии. Пока пользуйтесь канбаном или списком.
-        </div>
+        renderCalendar()
       )}
     </div>
   );

@@ -16,6 +16,8 @@ export type TaskCardData = {
   assignees: string[];
   tags: string[];
   dueLabel?: string | null;
+  /** ISO-дата срока — для календарного вида. */
+  dueDate?: string | null;
   comments?: number;
   attachments?: number;
 };
