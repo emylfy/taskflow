@@ -1,4 +1,7 @@
-taskflow.ru, www.taskflow.ru {
+# Домен берётся из переменной APP_DOMAIN (см. .env). Она пробрасывается в
+# caddy-контейнер через docker-compose.yml. Меняешь домен — правишь только
+# .env, этот файл трогать не нужно.
+{$APP_DOMAIN}, www.{$APP_DOMAIN} {
     encode zstd gzip
 
     # Adminer — закрыт Basic Auth. Логин: admin / Пароль: diploma2026.
