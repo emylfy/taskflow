@@ -13,6 +13,8 @@ type TopBarProps = {
   searchValue?: string;
   actions?: React.ReactNode;
   user?: string;
+  unreadCount?: number;
+  prioritySupport?: boolean;
 };
 
 export const TopBar: React.FC<TopBarProps> = ({
@@ -22,6 +24,8 @@ export const TopBar: React.FC<TopBarProps> = ({
   searchValue = 'Поиск по задачам, проектам, участникам…',
   actions,
   user = 'Иван Соколов',
+  unreadCount = 0,
+  prioritySupport = false,
 }) => (
   <header className={styles.bar}>
     {title && (
@@ -39,13 +43,27 @@ export const TopBar: React.FC<TopBarProps> = ({
       </Link>
     )}
     {actions}
-    <Link href="/notifications" className={styles.iconBtn} aria-label="Уведомления">
+    {prioritySupport ? (
+      <span
+        className={styles.priorityBadge}
+        title="Приоритетная поддержка — тариф «Бизнес»"
+        aria-label="Приоритетная поддержка"
+      >
+        <I.Shield size={11} stroke="#fff" />
+        Priority
+      </span>
+    ) : null}
+    <Link
+      href="/notifications"
+      className={styles.iconBtn}
+      aria-label={`Уведомления${unreadCount ? `: ${unreadCount} непрочитанных` : ''}`}
+    >
       <I.Bell size={16} stroke="#5B6670" />
-      <span className={styles.iconDot} />
+      {unreadCount > 0 ? <span className={styles.iconDot} /> : null}
     </Link>
-    <button className={styles.iconBtn} aria-label="Создать">
+    <Link href="/projects/new" className={styles.iconBtn} aria-label="Создать проект">
       <I.Plus size={16} stroke="#5B6670" />
-    </button>
+    </Link>
     <Avatar name={user} size={32} />
   </header>
 );

@@ -87,3 +87,18 @@
   background: var(--accent);
   border: 1.5px solid #fff;
 }
+
+.priorityBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: linear-gradient(135deg, #2E7D3E 0%, #2B5FA4 100%);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  border-radius: 999px;
+  white-space: nowrap;
+}
