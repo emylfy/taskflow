@@ -48,6 +48,12 @@ export default async function TaskDetailPage({
     }),
   }));
 
+  // Последний снимок (base64) — засеивает редактор, чтобы описание не терялось
+  // после рестарта сервера y-websocket.
+  const initialSnapshot = task.snapshots[0]
+    ? Buffer.from(task.snapshots[0].snapshot).toString('base64')
+    : null;
+
   // Версии — реальные снимки Yjs из БД (последние 10).
   const versions = task.snapshots.map((s) => ({
     id: s.id,
@@ -88,7 +94,12 @@ export default async function TaskDetailPage({
         <h1 className={styles.title}>{task.title}</h1>
 
         <div className={styles.sectionLabel}>Описание</div>
-        <CollaborativeEditor taskId={task.id} user={{ id: user.id, name: user.name ?? user.email }} />
+        <CollaborativeEditor
+          taskId={task.id}
+          user={{ id: user.id, name: user.name ?? user.email }}
+          initialSnapshot={initialSnapshot}
+          versions={versions}
+        />
 
         <div className={styles.sectionLabel} style={{ marginTop: 22 }}>
           Комментарии
@@ -110,21 +121,11 @@ export default async function TaskDetailPage({
         <div className={styles.divider} />
 
         <div className={styles.sectionLabel}>История версий</div>
-        {versions.length === 0 ? (
-          <div style={{ color: '#8B939C', fontSize: 13, padding: '8px 0' }}>
-            Снимков ещё нет. Они появляются автоматически каждые 3 секунды при редактировании.
-          </div>
-        ) : (
-          <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-            {versions.map((v) => (
-              <li key={v.id} style={{ padding: '8px 0', borderTop: '1px solid #E8EAEC' }}>
-                <div style={{ fontSize: 13, fontWeight: 500 }}>{v.author}</div>
-                <div style={{ fontSize: 12, color: '#5B6670' }}>{v.timeLabel}</div>
-                <div style={{ fontSize: 13, color: '#5B6670', marginTop: 2 }}>{v.summary}</div>
-              </li>
-            ))}
-          </ul>
-        )}
+        <div style={{ color: '#8B939C', fontSize: 13, padding: '8px 0' }}>
+          {versions.length === 0
+            ? 'Снимки появляются автоматически при редактировании описания.'
+            : `Версий: ${versions.length}. Список и откат — под описанием задачи.`}
+        </div>
       </aside>
     </div>
   );

@@ -25,7 +25,12 @@ const CollaborativeEditor = dynamic(
   },
 );
 
-type Props = { taskId: string; user: { id: string; name: string } };
+type Props = {
+  taskId: string;
+  user: { id: string; name: string };
+  initialSnapshot?: string | null;
+  versions?: { id: string; timeLabel: string; summary: string }[];
+};
 
 export const CollaborativeEditorLoader: React.FC<Props> = (props) => <CollaborativeEditor {...props} />;
 

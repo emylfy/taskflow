@@ -15,3 +15,80 @@
   font-size: 14px;
   line-height: 1.6;
 }
+
+.versions {
+  margin-top: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  background: var(--panel);
+}
+
+.versionsSummary {
+  cursor: pointer;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2, #5B6670);
+  user-select: none;
+}
+
+.versionList {
+  list-style: none;
+  margin: 0;
+  padding: 0 14px 8px;
+}
+
+.versionItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+}
+
+.versionTime {
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.versionCurrent {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #2E7D3E;
+  background: #E6F4EA;
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+
+.versionSummary {
+  font-size: 12px;
+  color: var(--text-3, #8B939C);
+  margin-top: 2px;
+}
+
+.restoreBtn {
+  margin-left: auto;
+  flex-shrink: 0;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-1, #1A1D23);
+  cursor: pointer;
+}
+
+.restoreBtn:hover:not(:disabled) {
+  background: var(--panel);
+}
+
+.restoreBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

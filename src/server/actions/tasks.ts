@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { requireUser } from '@/lib/session';
 import { broadcast } from '@/server/ws-broadcast';
+import { sendEmail } from '@/lib/email';
 import type { TaskStatus, Priority } from '@prisma/client';
 
 async function assertProjectAccess(userId: string, projectId: string) {
@@ -185,6 +186,18 @@ export async function updateTask(input: {
           payload: { taskId, projectId: existing.projectId, by: user.name ?? user.email },
         },
       });
+      const assignee = await prisma.user.findUnique({
+        where: { id: input.assigneeId },
+        select: { email: true },
+      });
+      if (assignee) {
+        const url = `${process.env.BETTER_AUTH_URL ?? ''}/projects/${existing.projectId}/tasks/${taskId}`;
+        await sendEmail({
+          to: assignee.email,
+          subject: 'Вам назначена задача — TaskFlow',
+          text: `${user.name ?? user.email} назначил(а) вам задачу «${task.title}».\n\nОткрыть: ${url}`,
+        }).catch((e) => console.error('assignment email error:', e));
+      }
     }
   }
 
@@ -217,6 +230,11 @@ export async function deleteTask(taskId: string) {
   revalidatePath(`/projects/${existing.projectId}`);
 }
 
+// Новая версия нарезается не чаще, чем раз в VERSION_INTERVAL_MS; частые правки
+// внутри интервала коалесцируются в текущую версию. Храним последние MAX_VERSIONS.
+const VERSION_INTERVAL_MS = 90_000;
+const MAX_VERSIONS = 20;
+
 export async function saveYjsSnapshot(taskId: string, snapshot: Uint8Array) {
   const user = await requireUser();
   const existing = await prisma.task.findUnique({
@@ -226,9 +244,53 @@ export async function saveYjsSnapshot(taskId: string, snapshot: Uint8Array) {
   if (!existing) throw new Error('Задача не найдена');
   await assertProjectAccess(user.id, existing.projectId);
 
-  await prisma.yjsSnapshot.upsert({
-    where: { id: taskId },
-    create: { id: taskId, taskId, snapshot: Buffer.from(snapshot) },
-    update: { snapshot: Buffer.from(snapshot) },
+  const buf = Buffer.from(snapshot);
+  const latest = await prisma.yjsSnapshot.findFirst({
+    where: { taskId },
+    orderBy: { updatedAt: 'desc' },
+    select: { id: true, updatedAt: true },
   });
+
+  if (latest && Date.now() - latest.updatedAt.getTime() < VERSION_INTERVAL_MS) {
+    await prisma.yjsSnapshot.update({ where: { id: latest.id }, data: { snapshot: buf } });
+  } else {
+    await prisma.yjsSnapshot.create({ data: { taskId, snapshot: buf } });
+    const stale = await prisma.yjsSnapshot.findMany({
+      where: { taskId },
+      orderBy: { updatedAt: 'desc' },
+      skip: MAX_VERSIONS,
+      select: { id: true },
+    });
+    if (stale.length) {
+      await prisma.yjsSnapshot.deleteMany({ where: { id: { in: stale.map((s) => s.id) } } });
+    }
+  }
+}
+
+// Возвращает байты выбранной версии (base64) и логирует откат. Само применение
+// (замена содержимого описания) происходит на клиенте через BlockNote, чтобы
+// корректно распространиться остальным участникам совместного редактирования.
+export async function restoreVersion(taskId: string, versionId: string): Promise<string> {
+  const user = await requireUser();
+  const task = await prisma.task.findUnique({
+    where: { id: taskId },
+    select: { projectId: true, project: { select: { organizationId: true } } },
+  });
+  if (!task) throw new Error('Задача не найдена');
+  await assertProjectAccess(user.id, task.projectId);
+
+  const version = await prisma.yjsSnapshot.findFirst({ where: { id: versionId, taskId } });
+  if (!version) throw new Error('Версия не найдена');
+
+  await prisma.activityLog.create({
+    data: {
+      organizationId: task.project.organizationId,
+      actorId: user.id,
+      action: 'task.version.restore',
+      targetType: 'task',
+      targetId: taskId,
+    },
+  });
+
+  return Buffer.from(version.snapshot).toString('base64');
 }
