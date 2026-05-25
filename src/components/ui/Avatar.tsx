@@ -32,9 +32,11 @@ type AvatarProps = {
   ring?: string | boolean;
   title?: string;
   style?: React.CSSProperties;
+  /** URL или data-URI загруженного аватара; если задан — рисуем фото вместо инициалов. */
+  src?: string | null;
 };
 
-export const Avatar: React.FC<AvatarProps> = ({ name = '', size = 28, ring, title, style }) => {
+export const Avatar: React.FC<AvatarProps> = ({ name = '', size = 28, ring, title, style, src }) => {
   const [bg, fg] = avaColor(name);
   const ringColor = ring === true ? 'var(--accent)' : (typeof ring === 'string' ? ring : null);
   return (
@@ -48,10 +50,16 @@ export const Avatar: React.FC<AvatarProps> = ({ name = '', size = 28, ring, titl
         color: fg,
         fontSize: Math.round(size * 0.4),
         boxShadow: ringColor ? `0 0 0 2px #fff, 0 0 0 4px ${ringColor}` : 'none',
+        overflow: 'hidden',
         ...style,
       }}
     >
-      {initialsOf(name)}
+      {src ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      ) : (
+        initialsOf(name)
+      )}
     </div>
   );
 };

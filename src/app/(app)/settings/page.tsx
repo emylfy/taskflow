@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { requireUser } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
-import { updateProfile } from '@/server/actions/profile';
+import { updateProfile, updateAvatar, removeAvatar } from '@/server/actions/profile';
 import styles from './settings.module.css';
 
 export const metadata = { title: 'Настройки профиля — TaskFlow' };
@@ -36,13 +36,14 @@ export default async function SettingsPage() {
 
   const dbUser = await prisma.user.findUnique({
     where: { id: user.id },
-    select: { id: true, name: true, email: true, timezone: true },
+    select: { id: true, name: true, email: true, timezone: true, image: true },
   });
   const profile = dbUser ?? {
     id: user.id,
     name: user.name ?? '',
     email: user.email ?? '',
     timezone: 'Europe/Moscow',
+    image: null as string | null,
   };
 
   const accounts = await prisma.account.findMany({
@@ -76,17 +77,40 @@ export default async function SettingsPage() {
           <h1>Профиль</h1>
           <p className={styles.lead}>Эти данные увидят участники ваших проектов.</p>
 
-          <form action={updateProfile}>
-            <div className={styles.photoCard}>
-              <Avatar name={profile.name || profile.email} size={72} />
-              <div style={{ flex: 1 }}>
-                <div className={styles.photoTitle}>Ваш аватар</div>
-                <div className={styles.photoHint}>
-                  Генерируется автоматически из имени. Загрузка фото появится в следующей версии.
-                </div>
-              </div>
+          <div className={styles.photoCard}>
+            <Avatar name={profile.name || profile.email} size={72} src={profile.image} />
+            <div style={{ flex: 1 }}>
+              <div className={styles.photoTitle}>Ваш аватар</div>
+              <div className={styles.photoHint}>JPEG, PNG, WEBP или GIF, до 512 КБ.</div>
+              <form
+                action={updateAvatar}
+                style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}
+              >
+                <input
+                  type="file"
+                  name="avatar"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  required
+                  style={{ fontSize: 13 }}
+                />
+                <Button variant="secondary" type="submit">
+                  Загрузить
+                </Button>
+              </form>
+              {profile.image && (
+                <form action={removeAvatar} style={{ marginTop: 6 }}>
+                  <button
+                    type="submit"
+                    style={{ background: 'none', border: 'none', color: '#B23A3A', fontSize: 12, cursor: 'pointer', padding: 0 }}
+                  >
+                    Удалить фото
+                  </button>
+                </form>
+              )}
             </div>
+          </div>
 
+          <form action={updateProfile}>
             <Input name="name" label="Имя и фамилия" defaultValue={profile.name} required />
             <div style={{ height: 14 }} />
             <Input
