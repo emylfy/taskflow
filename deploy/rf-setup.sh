@@ -119,10 +119,14 @@ EOF
 fi
 
 # --- 8. сборка (с npm/prisma-зеркалами через build-arg) и запуск ---
-echo "[rf-setup] сборка образа (зеркала npm/prisma)..."
-docker compose build \
+echo "[rf-setup] сборка образа (--network=host + зеркала npm/prisma)..."
+# --network=host: RUN-шаги (apk/npm/prisma) качают через сеть ХОСТА (eth0, MTU 1280),
+# а не через сеть buildkit (MTU 1500) — иначе загрузки зависают на узком канале.
+# Имя образа taskflow-app совпадает с тем, что ждёт docker compose для сервиса app.
+docker build --network=host \
   --build-arg NPM_REGISTRY="$NPM_MIRROR" \
-  --build-arg PRISMA_ENGINES_MIRROR="$PRISMA_MIRROR" app
+  --build-arg PRISMA_ENGINES_MIRROR="$PRISMA_MIRROR" \
+  -t taskflow-app .
 echo "[rf-setup] docker compose up -d"
 docker compose up -d
 
