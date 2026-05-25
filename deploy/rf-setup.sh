@@ -9,6 +9,14 @@
 set -euo pipefail
 trap 'echo "[rf-setup] FAILED на строке $LINENO"; exit 1' ERR
 
+# Блокировка: не дать двум копиям бежать одновременно. Иначе одна копия делает
+# `systemctl restart docker` и рвёт сборку у другой (rpc error EOF).
+exec 9>/tmp/tf-deploy.lock
+if ! flock -n 9; then
+  echo "[rf-setup] уже запущен другой экземпляр (lock занят) — выхожу, повторно не запускаю"
+  exit 0
+fi
+
 # перейти в корень репозитория (скрипт лежит в deploy/)
 cd "$(cd "$(dirname "$0")" && pwd)/.."
 ROOT=$(pwd)
