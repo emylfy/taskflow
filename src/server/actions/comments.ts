@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { requireUser } from '@/lib/session';
 import { broadcast } from '@/server/ws-broadcast';
+import { sendEmail } from '@/lib/email';
 
 const MENTION_RE = /@([а-яА-ЯёЁa-zA-Z0-9_-]+)/g;
 
@@ -29,19 +30,44 @@ export async function addComment(input: { taskId: string; content: string }) {
     data: { taskId: input.taskId, authorId: user.id, content },
   });
 
-  const mentions = Array.from(content.matchAll(MENTION_RE)).map((m) => m[1]);
-  if (mentions.length) {
-    const mentioned = await prisma.user.findMany({
-      where: { email: { in: mentions.map((m) => m + '@taskflow.ru') } },
-      select: { id: true },
+  // Резолвим упоминания по участникам организации (по локальной части email,
+  // полному имени без пробелов или первому слову имени) — а не по фиктивному
+  // адресу вида @имя@taskflow.ru.
+  const tokens = Array.from(new Set(Array.from(content.matchAll(MENTION_RE)).map((m) => m[1].toLowerCase())));
+  if (tokens.length) {
+    const orgMembers = await prisma.member.findMany({
+      where: { organizationId: task.project.organizationId },
+      select: { user: { select: { id: true, name: true, email: true } } },
     });
-    await prisma.notification.createMany({
-      data: mentioned.map((u) => ({
-        userId: u.id,
-        type: 'mention',
-        payload: { taskId: input.taskId, commentId: comment.id, actorId: user.id },
-      })),
-    });
+    const matched = orgMembers
+      .map((m) => m.user)
+      .filter((u) => {
+        const local = u.email.split('@')[0].toLowerCase();
+        const nameKey = u.name.toLowerCase().replace(/\s+/g, '');
+        const firstName = u.name.toLowerCase().split(/\s+/)[0];
+        return tokens.some((t) => t === local || t === nameKey || t === firstName);
+      })
+      .filter((u) => u.id !== user.id);
+
+    if (matched.length) {
+      await prisma.notification.createMany({
+        data: matched.map((u) => ({
+          userId: u.id,
+          type: 'mention',
+          payload: { taskId: input.taskId, commentId: comment.id, actorId: user.id, projectId: task.projectId },
+        })),
+      });
+      const url = `${process.env.BETTER_AUTH_URL ?? ''}/projects/${task.projectId}/tasks/${input.taskId}`;
+      await Promise.all(
+        matched.map((u) =>
+          sendEmail({
+            to: u.email,
+            subject: 'Вас упомянули в задаче — TaskFlow',
+            text: `${user.name ?? user.email} упомянул(а) вас в комментарии:\n\n«${content}»\n\nОткрыть задачу: ${url}`,
+          }).catch((e) => console.error('mention email error:', e)),
+        ),
+      );
+    }
   }
 
   broadcast(`task-${input.taskId}`, { type: 'comment:added', payload: comment });

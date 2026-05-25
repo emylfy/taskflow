@@ -1,6 +1,7 @@
 import { createServer } from 'node:http';
 import next from 'next';
 import { handleCollaborationUpgrade } from './src/server/ws-handler';
+import { startDueReminderScheduler } from './src/server/scheduler';
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = process.env.HOSTNAME ?? '0.0.0.0';
@@ -29,6 +30,8 @@ async function start() {
 
   httpServer.listen(port, hostname, () => {
     console.log(`▲ TaskFlow: http://${hostname}:${port}  (WebSocket /api/collaboration)`);
+    // Планировщик напоминаний о приближении срока задач (раз в час).
+    startDueReminderScheduler();
   });
 }
 
