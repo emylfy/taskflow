@@ -1,27 +1,18 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verifyWebhookSignature } from '@/lib/yookassa';
+import { getPayment } from '@/lib/yookassa';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 type YooNotification = {
-  type: string;
-  event: string;
-  object: {
-    id: string;
-    status: string;
-    paid?: boolean;
-    metadata?: { organizationId?: string; planId?: string };
-  };
+  type?: string;
+  event?: string;
+  object?: { id?: string };
 };
 
 export async function POST(req: Request) {
   const raw = await req.text();
-  const signature = req.headers.get('x-yoomoney-sha256') ?? req.headers.get('x-yookassa-signature');
-  if (!verifyWebhookSignature(raw, signature)) {
-    return NextResponse.json({ error: 'bad signature' }, { status: 403 });
-  }
 
   let body: YooNotification;
   try {
@@ -30,17 +21,34 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'bad json' }, { status: 400 });
   }
 
-  const providerId = body.object.id;
-  const existing = await prisma.payment.findUnique({ where: { providerId } });
+  const paymentId = body.object?.id;
+  if (!paymentId) {
+    return NextResponse.json({ error: 'no payment id' }, { status: 400 });
+  }
+
+  // ЮKassa НЕ подписывает уведомления — телу доверять нельзя. Боевая проверка:
+  // перезапрашиваем платёж напрямую из API (запрос авторизован нашим секретным
+  // ключом, подделать ответ невозможно). Дополнительно ограничение по IP
+  // отправителя настраивается на уровне Caddy (адреса ЮKassa публичны).
+  let payment;
+  try {
+    payment = await getPayment(paymentId);
+  } catch (e) {
+    console.error('ЮKassa getPayment не удался:', e);
+    return NextResponse.json({ error: 'cannot verify payment' }, { status: 502 });
+  }
+
+  const existing = await prisma.payment.findUnique({ where: { providerId: paymentId } });
   if (!existing) {
     return NextResponse.json({ error: 'unknown payment' }, { status: 404 });
   }
 
+  // Идемпотентность: повторное уведомление по уже проведённому платежу.
   if (existing.status === 'SUCCESS') {
     return NextResponse.json({ ok: true, idempotent: true });
   }
 
-  if (body.event === 'payment.succeeded' && body.object.paid) {
+  if (payment.status === 'succeeded' && payment.paid) {
     const sub = await prisma.subscription.findUnique({
       where: { id: existing.subscriptionId },
       include: { organization: { include: { members: { where: { role: 'OWNER' } } } } },
@@ -50,21 +58,17 @@ export async function POST(req: Request) {
     }
 
     // Активация подписки + продление expiresAt на 30 дней от max(now, expiresAt).
-    // Если у организации уже есть активная подписка — переводим её в EXPIRED.
+    // Прежняя активная подписка организации переводится в EXPIRED.
     const newExpiresAt = new Date(Math.max(Date.now(), sub.expiresAt.getTime()) + 30 * 24 * 60 * 60 * 1000);
     const ownerId = sub.organization.members[0]?.userId;
 
     await prisma.$transaction([
       prisma.payment.update({
-        where: { providerId },
+        where: { providerId: paymentId },
         data: { status: 'SUCCESS', paidAt: new Date() },
       }),
       prisma.subscription.updateMany({
-        where: {
-          organizationId: sub.organizationId,
-          status: 'ACTIVE',
-          NOT: { id: sub.id },
-        },
+        where: { organizationId: sub.organizationId, status: 'ACTIVE', NOT: { id: sub.id } },
         data: { status: 'EXPIRED' },
       }),
       prisma.subscription.update({
@@ -97,11 +101,11 @@ export async function POST(req: Request) {
           ]
         : []),
     ]);
-  } else if (body.event === 'payment.canceled') {
+  } else if (payment.status === 'canceled') {
     const sub = await prisma.subscription.findUnique({ where: { id: existing.subscriptionId } });
     await prisma.$transaction([
       prisma.payment.update({
-        where: { providerId },
+        where: { providerId: paymentId },
         data: { status: 'FAILED' },
       }),
       ...(sub && sub.status === 'PENDING'

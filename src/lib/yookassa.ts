@@ -12,8 +12,10 @@ type CreatePaymentInput = {
 type YooPayment = {
   id: string;
   status: 'pending' | 'waiting_for_capture' | 'succeeded' | 'canceled';
+  paid?: boolean;
   amount: { value: string; currency: string };
   confirmation: { type: string; confirmation_url?: string };
+  metadata?: Record<string, string>;
 };
 
 function authHeader(): string {
@@ -46,6 +48,23 @@ export async function createPayment(input: CreatePaymentInput): Promise<YooPayme
   return (await res.json()) as YooPayment;
 }
 
+// Запрос текущего состояния платежа из API ЮKassa. Используется в вебхуке:
+// уведомление ЮKassa НЕ подписывается HMAC, поэтому доверять телу нельзя —
+// проверяем статус, запросив платёж напрямую (запрос авторизован нашим
+// секретным ключом, подделать ответ нельзя).
+export async function getPayment(id: string): Promise<YooPayment> {
+  const res = await fetch(`${API_BASE}/payments/${encodeURIComponent(id)}`, {
+    headers: { Authorization: authHeader() },
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`ЮKassa get payment ${res.status}: ${text}`);
+  }
+  return (await res.json()) as YooPayment;
+}
+
+// Оставлено для совместимости/тестов. ВНИМАНИЕ: ЮKassa не подписывает вебхуки
+// HMAC — для боевой проверки используйте getPayment (см. вебхук).
 export function verifyWebhookSignature(rawBody: string, signature: string | null): boolean {
   const secret = process.env.YOOKASSA_WEBHOOK_SECRET;
   if (!secret || !signature) return false;
