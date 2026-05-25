@@ -18,6 +18,12 @@ export DEBIAN_FRONTEND=noninteractive
 NPM_MIRROR="https://registry.npmmirror.com"
 PRISMA_MIRROR="https://registry.npmmirror.com/-/binary/prisma"
 
+# Идемпотентно добавить строку в crontab root. Устойчиво к отсутствию crontab
+# и к set -e/pipefail (на свежем сервере `crontab -l` возвращает ошибку).
+add_cron() {  # $1 = маркер для дедупликации, $2 = строка cron
+  { crontab -l 2>/dev/null | grep -v "$1" || true; echo "$2"; } | crontab - || true
+}
+
 # --- 1. базовые пакеты ---
 apt-get update -y -q
 apt-get install -y -q curl ca-certificates ufw openssl iptables cron
@@ -34,8 +40,7 @@ echo "[rf-setup] публичный IP=$IP, домен=$NIP"
 IFACE=$(ip route show default | awk '/default/{print $5; exit}')
 IFACE=${IFACE:-eth0}
 ip link set "$IFACE" mtu 1280 || true
-( crontab -l 2>/dev/null | grep -v 'taskflow-mtu'; \
-  echo "@reboot /sbin/ip link set $IFACE mtu 1280  # taskflow-mtu" ) | crontab -
+add_cron 'taskflow-mtu' "@reboot /sbin/ip link set $IFACE mtu 1280  # taskflow-mtu"
 echo "[rf-setup] MTU 1280 на $IFACE (закреплено)"
 
 # --- 4. swap, если RAM < 4 ГБ ---
@@ -66,8 +71,7 @@ echo "[rf-setup] docker: $(docker --version)"
 modprobe xt_TCPMSS 2>/dev/null || true
 iptables -t mangle -C FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss 1240 2>/dev/null \
   || iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss 1240 || true
-( crontab -l 2>/dev/null | grep -v 'taskflow-mss'; \
-  echo '@reboot /sbin/iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss 1240  # taskflow-mss' ) | crontab -
+add_cron 'taskflow-mss' '@reboot /sbin/iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss 1240  # taskflow-mss'
 echo "[rf-setup] MSS-клэмп 1240 (закреплено)"
 
 # --- 7. .env (генерим один раз) ---
