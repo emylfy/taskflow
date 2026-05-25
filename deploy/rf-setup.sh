@@ -69,8 +69,15 @@ if ! command -v docker >/dev/null 2>&1; then
   curl -fsSL https://get.docker.com | sh >/dev/null 2>&1
 fi
 mkdir -p /etc/docker
+# mtu 1280: путь провайдера режет 1500 при заблокированном ICMP. Задаём MTU
+# самому демону, чтобы и сборочная сеть buildkit, и сети контейнеров (Caddy и
+# т.д.) использовали пакеты, проходящие сквозь канал, иначе загрузки в сборке
+# (apk/npm) и TLS-рукопожатия зависают.
 cat > /etc/docker/daemon.json <<'EOF'
-{ "registry-mirrors": ["https://dockerhub.timeweb.cloud", "https://huecker.io", "https://mirror.gcr.io"] }
+{
+  "registry-mirrors": ["https://dockerhub.timeweb.cloud", "https://huecker.io", "https://mirror.gcr.io"],
+  "mtu": 1280
+}
 EOF
 systemctl restart docker; sleep 3
 echo "[rf-setup] docker: $(docker --version)"
