@@ -1,152 +1,213 @@
 import * as React from 'react';
 import { I } from '@/components/icons/Icons';
 import { Button } from '@/components/ui/Button';
+import { prisma } from '@/lib/prisma';
+import { requireUser } from '@/lib/session';
+import { parseFeatures, FREE_FEATURES } from '@/lib/plan-limits';
+import { startCheckoutForm } from '@/server/actions/billing';
 import styles from './billing.module.css';
 
 export const metadata = { title: 'Тарифы и оплата — TaskFlow' };
+export const dynamic = 'force-dynamic';
 
-const PLANS = [
-  {
-    name: 'Бесплатный',
-    price: '0 ₽',
-    suffix: 'навсегда',
-    features: ['До 3 пользователей', 'До 2 проектов', 'Канбан и комментарии', 'История изменений 7 дней'],
-    cta: 'Текущий тариф',
-    variant: 'secondary' as const,
-    disabled: true,
-  },
-  {
-    name: 'Команда',
-    price: '1 500 ₽',
-    suffix: 'в месяц',
-    features: [
-      'До 20 пользователей',
-      'Безлимит проектов',
-      'Совместное редактирование в реальном времени',
-      'История версий без ограничений',
-      'Приоритет в поддержке',
-    ],
-    cta: 'Выбрать',
-    variant: 'primary' as const,
-    badge: 'Популярный',
-    selected: true,
-  },
-  {
-    name: 'Бизнес',
-    price: '4 500 ₽',
-    suffix: 'в месяц',
-    features: [
-      'Без ограничений по участникам',
-      'SLA 99,9 %',
-      'Единый вход (SSO)',
-      'Расширенный журнал действий',
-      'Персональный менеджер',
-    ],
-    cta: 'Выбрать',
-    variant: 'secondary' as const,
-  },
-];
+const PRICE_FORMATTER = new Intl.NumberFormat('ru-RU');
 
 const METHODS = [
-  { t: 'МИР', sub: 'Карта российского банка', a: true, glyph: 'МИР', color: '#1A1D23' },
+  { t: 'МИР', sub: 'Карта российского банка', glyph: 'МИР', color: '#1A1D23' },
   { t: 'СБП', sub: 'Система быстрых платежей', glyph: 'СБП', color: '#B23A3A' },
   { t: 'ЮMoney', sub: 'Кошелёк ЮMoney', glyph: 'Ю', color: '#8A43B8' },
   { t: 'СберPay', sub: 'Оплата по QR-коду', glyph: 'S', color: '#2E7D3E' },
 ];
 
-export default function BillingPage() {
+export default async function BillingPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const user = await requireUser();
+  const sp = await searchParams;
+  const focusPlanId = typeof sp.focus === 'string' ? sp.focus : undefined;
+  const status = typeof sp.status === 'string' ? sp.status : undefined;
+  const justReturned = typeof sp.return === 'string';
+
+  const member = await prisma.member.findFirst({
+    where: { userId: user.id },
+    include: { organization: true },
+  });
+  if (!member) throw new Error('Вы не состоите ни в одной организации');
+
+  const [plans, currentSub, usage] = await Promise.all([
+    prisma.plan.findMany({ orderBy: { priceRub: 'asc' } }),
+    prisma.subscription.findFirst({
+      where: { organizationId: member.organizationId, status: 'ACTIVE', expiresAt: { gt: new Date() } },
+      include: { plan: true },
+      orderBy: { expiresAt: 'desc' },
+    }),
+    prisma.organization.findUnique({
+      where: { id: member.organizationId },
+      select: { _count: { select: { projects: true, members: true } } },
+    }),
+  ]);
+
+  const currentFeatures = currentSub ? parseFeatures(currentSub.plan.features) : FREE_FEATURES;
+  const currentPlanName = currentSub?.plan.name ?? 'Бесплатный';
+  const focused = focusPlanId ? plans.find((p) => p.id === focusPlanId) ?? null : null;
+
   return (
     <div className={styles.main}>
-          <div className={styles.plans}>
-            <h1>Тарифы</h1>
-            <p>Выберите тариф, который подходит вашей команде. Оплата в рублях через ЮKassa.</p>
+      <div className={styles.plans}>
+        <h1>Тарифы</h1>
+        <p>
+          Текущий тариф: <b>«{currentPlanName}»</b>
+          {currentSub && currentSub.plan.priceRub > 0 ? (
+            <>
+              {' · '}
+              действует до{' '}
+              <b>
+                {currentSub.expiresAt.toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' })}
+              </b>
+            </>
+          ) : null}
+          .
+        </p>
 
-            <div className={styles.plansGrid}>
-              {PLANS.map((p) => (
-                <div key={p.name} className={`${styles.plan} ${p.selected ? styles.planFeatured : ''}`}>
-                  {p.badge && <div className={styles.planBadge}>{p.badge}</div>}
-                  <div className={styles.planName}>{p.name}</div>
-                  <div className={styles.planPrice}>
-                    <span className={styles.planPriceValue}>{p.price}</span>
-                    <span className={styles.planPriceSuffix}>{p.suffix}</span>
-                  </div>
-                  <div className={styles.planNote}>за всю команду, с НДС</div>
-                  <Button variant={p.variant} block disabled={p.disabled}>
-                    {p.cta}
-                  </Button>
-                  <div className={styles.planSep} />
-                  <ul className={styles.planFeatures}>
-                    {p.features.map((f) => (
-                      <li key={f}>
-                        <I.Check size={16} stroke="#2E7D3E" />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
+        <div className={styles.summaryRow} style={{ marginTop: 16, marginBottom: 16 }}>
+          <span>
+            Проекты: <b>{usage?._count.projects ?? 0}</b>
+            {currentFeatures.limits.maxProjects === -1 ? ' / ∞' : ` / ${currentFeatures.limits.maxProjects}`}
+          </span>
+          <span style={{ marginLeft: 16 }}>
+            Участники: <b>{usage?._count.members ?? 0}</b>
+            {currentFeatures.limits.maxMembers === -1 ? ' / ∞' : ` / ${currentFeatures.limits.maxMembers}`}
+          </span>
+        </div>
+
+        {status === 'free-activated' ? (
+          <p style={{ color: '#2E7D3E' }}>Тариф «Бесплатный» активирован.</p>
+        ) : null}
+        {justReturned ? (
+          <p style={{ color: '#5B6670' }}>
+            Вы вернулись со страницы оплаты ЮKassa. Если статус подписки не изменился — подождите минуту:
+            подтверждение приходит по вебхуку.
+          </p>
+        ) : null}
+
+        <div className={styles.plansGrid}>
+          {plans.map((p) => {
+            const features = parseFeatures(p.features);
+            const isCurrent = currentSub?.planId === p.id;
+            const isPopular = p.priceRub > 0 && p.priceRub < 2000;
+            const priceLabel = p.priceRub === 0 ? '0 ₽' : `${PRICE_FORMATTER.format(p.priceRub)} ₽`;
+            const suffix = p.priceRub === 0 ? 'навсегда' : 'в месяц';
+            const ctaLabel = isCurrent ? 'Текущий тариф' : p.priceRub === 0 ? 'Перейти на бесплатный' : 'Выбрать';
+            return (
+              <div key={p.id} className={`${styles.plan} ${isPopular ? styles.planFeatured : ''}`}>
+                {isPopular && !isCurrent ? <div className={styles.planBadge}>Популярный</div> : null}
+                {isCurrent ? <div className={styles.planBadge}>Активен</div> : null}
+                <div className={styles.planName}>{p.name}</div>
+                <div className={styles.planPrice}>
+                  <span className={styles.planPriceValue}>{priceLabel}</span>
+                  <span className={styles.planPriceSuffix}>{suffix}</span>
                 </div>
+                <div className={styles.planNote}>за всю команду, с НДС</div>
+                <form action={startCheckoutForm.bind(null, { organizationId: member.organizationId, planId: p.id })}>
+                  <Button
+                    type="submit"
+                    variant={isPopular && !isCurrent ? 'primary' : 'secondary'}
+                    block
+                    disabled={isCurrent}
+                  >
+                    {ctaLabel}
+                  </Button>
+                </form>
+                <div className={styles.planSep} />
+                <ul className={styles.planFeatures}>
+                  {features.display.map((f) => (
+                    <li key={f}>
+                      <I.Check size={16} stroke="#2E7D3E" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {focused && focused.priceRub > 0 ? (
+        <aside className={styles.payModal}>
+          <div className={styles.payHead}>
+            <div className={styles.payTitle}>Оплата тарифа</div>
+            <div style={{ flex: 1 }} />
+            <a href="/admin/billing" aria-label="Закрыть">
+              <I.X size={18} stroke="#5B6670" />
+            </a>
+          </div>
+          <div className={styles.payBody}>
+            <div className={styles.summary}>
+              <div className={styles.summaryRow}>
+                <span>Тариф</span>
+                <span className={styles.bold}>{focused.name} · месячная подписка</span>
+              </div>
+              <div className={styles.summaryRow}>
+                <span>Период</span>
+                <span>1 месяц</span>
+              </div>
+              <div className={styles.summaryRow}>
+                <span>Организация</span>
+                <span>{member.organization.name}</span>
+              </div>
+              <div className={styles.summarySep} />
+              <div className={styles.summaryTotal}>
+                <span>К оплате</span>
+                <span className={styles.total}>{PRICE_FORMATTER.format(focused.priceRub)} ₽</span>
+              </div>
+              <div className={styles.vat}>
+                в том числе НДС 20 %: {PRICE_FORMATTER.format(Math.round(focused.priceRub * 0.2))} ₽
+              </div>
+            </div>
+
+            <div className={styles.methodTitle}>Способ оплаты</div>
+            <div className={styles.methods}>
+              {METHODS.map((m, i) => (
+                <label key={m.t} className={`${styles.method} ${i === 0 ? styles.methodActive : ''}`}>
+                  <span className={`${styles.radio} ${i === 0 ? styles.radioOn : ''}`}>
+                    {i === 0 && <span className={styles.radioDot} />}
+                  </span>
+                  <span className={styles.methodBadge} style={{ color: m.color }}>
+                    {m.glyph}
+                  </span>
+                  <span className={styles.methodInfo}>
+                    <span className={styles.methodName}>{m.t}</span>
+                    <span className={styles.methodSub}>{m.sub}</span>
+                  </span>
+                </label>
               ))}
             </div>
-          </div>
 
-          <aside className={styles.payModal}>
-            <div className={styles.payHead}>
-              <div className={styles.payTitle}>Оплата тарифа</div>
-              <div style={{ flex: 1 }} />
-              <I.X size={18} stroke="#5B6670" />
-            </div>
-            <div className={styles.payBody}>
-              <div className={styles.summary}>
-                <div className={styles.summaryRow}>
-                  <span>Тариф</span>
-                  <span className={styles.bold}>Команда · месячная подписка</span>
-                </div>
-                <div className={styles.summaryRow}>
-                  <span>Период</span>
-                  <span>1 месяц</span>
-                </div>
-                <div className={styles.summaryRow}>
-                  <span>Организация</span>
-                  <span>Команда TaskFlow</span>
-                </div>
-                <div className={styles.summarySep} />
-                <div className={styles.summaryTotal}>
-                  <span>К оплате</span>
-                  <span className={styles.total}>1 500 ₽</span>
-                </div>
-                <div className={styles.vat}>в том числе НДС 20 %: 250 ₽</div>
-              </div>
-
-              <div className={styles.methodTitle}>Способ оплаты</div>
-              <div className={styles.methods}>
-                {METHODS.map((m) => (
-                  <label key={m.t} className={`${styles.method} ${m.a ? styles.methodActive : ''}`}>
-                    <span className={`${styles.radio} ${m.a ? styles.radioOn : ''}`}>
-                      {m.a && <span className={styles.radioDot} />}
-                    </span>
-                    <span className={styles.methodBadge} style={{ color: m.color }}>
-                      {m.glyph}
-                    </span>
-                    <span className={styles.methodInfo}>
-                      <span className={styles.methodName}>{m.t}</span>
-                      <span className={styles.methodSub}>{m.sub}</span>
-                    </span>
-                  </label>
-                ))}
-              </div>
-
-              <Button variant="primary" size="lg" block trailing={<I.ArrowRight size={14} stroke="#fff" />}>
-                Перейти к оплате · 1 500 ₽
+            <form action={startCheckoutForm.bind(null, { organizationId: member.organizationId, planId: focused.id })}>
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                block
+                trailing={<I.ArrowRight size={14} stroke="#fff" />}
+              >
+                Перейти к оплате · {PRICE_FORMATTER.format(focused.priceRub)} ₽
               </Button>
+            </form>
 
-              <div className={styles.secure}>
-                <I.Shield size={16} stroke="#2E7D3E" />
-                <span>
-                  Оплата через ЮKassa. Данные карты не сохраняются на наших серверах. После оплаты подписка активируется
-                  автоматически, чек придёт на почту <b>ivan.sokolov@taskflow.ru</b>.
-                </span>
-              </div>
+            <div className={styles.secure}>
+              <I.Shield size={16} stroke="#2E7D3E" />
+              <span>
+                Оплата через ЮKassa. Данные карты не сохраняются на наших серверах. После оплаты подписка
+                активируется по вебхуку, чек придёт на почту <b>{user.email}</b>.
+              </span>
             </div>
-          </aside>
+          </div>
+        </aside>
+      ) : null}
     </div>
   );
 }

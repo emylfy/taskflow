@@ -1,4 +1,5 @@
 import { PrismaClient, MemberRole, TaskStatus, Priority, SubStatus } from '@prisma/client';
+import { FREE_FEATURES, TEAM_FEATURES, BUSINESS_FEATURES } from '../src/lib/plan-limits';
 
 const prisma = new PrismaClient();
 
@@ -144,21 +145,21 @@ async function main() {
       data: {
         name: 'Бесплатный',
         priceRub: 0,
-        features: ['До 3 пользователей', 'До 2 проектов', 'Канбан и комментарии'],
+        features: FREE_FEATURES as unknown as object,
       },
     }),
     prisma.plan.create({
       data: {
         name: 'Команда',
-        priceRub: 1500,
-        features: ['До 20 пользователей', 'Безлимит проектов', 'Совместное редактирование', 'История версий'],
+        priceRub: 790,
+        features: TEAM_FEATURES as unknown as object,
       },
     }),
     prisma.plan.create({
       data: {
         name: 'Бизнес',
-        priceRub: 4500,
-        features: ['Без ограничений', 'SLA 99,9 %', 'Единый вход (SSO)', 'Приоритетная поддержка'],
+        priceRub: 2900,
+        features: BUSINESS_FEATURES as unknown as object,
       },
     }),
   ]);

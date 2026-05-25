@@ -49,6 +49,13 @@ export async function createPayment(input: CreatePaymentInput): Promise<YooPayme
 export function verifyWebhookSignature(rawBody: string, signature: string | null): boolean {
   const secret = process.env.YOOKASSA_WEBHOOK_SECRET;
   if (!secret || !signature) return false;
-  const hmac = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
-  return crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(signature));
+  const expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
+  // timingSafeEqual бросает исключение при несовпадении длин — заранее проверяем,
+  // чтобы любая невалидная подпись возвращала false вместо 500.
+  if (expected.length !== signature.length) return false;
+  try {
+    return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+  } catch {
+    return false;
+  }
 }

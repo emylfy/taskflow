@@ -41,21 +41,73 @@ export async function POST(req: Request) {
   }
 
   if (body.event === 'payment.succeeded' && body.object.paid) {
+    const sub = await prisma.subscription.findUnique({
+      where: { id: existing.subscriptionId },
+      include: { organization: { include: { members: { where: { role: 'OWNER' } } } } },
+    });
+    if (!sub) {
+      return NextResponse.json({ error: 'subscription gone' }, { status: 410 });
+    }
+
+    // Активация подписки + продление expiresAt на 30 дней от max(now, expiresAt).
+    // Если у организации уже есть активная подписка — переводим её в EXPIRED.
+    const newExpiresAt = new Date(Math.max(Date.now(), sub.expiresAt.getTime()) + 30 * 24 * 60 * 60 * 1000);
+    const ownerId = sub.organization.members[0]?.userId;
+
     await prisma.$transaction([
       prisma.payment.update({
         where: { providerId },
         data: { status: 'SUCCESS', paidAt: new Date() },
       }),
-      prisma.subscription.update({
-        where: { id: existing.subscriptionId },
-        data: { status: 'ACTIVE' },
+      prisma.subscription.updateMany({
+        where: {
+          organizationId: sub.organizationId,
+          status: 'ACTIVE',
+          NOT: { id: sub.id },
+        },
+        data: { status: 'EXPIRED' },
       }),
+      prisma.subscription.update({
+        where: { id: sub.id },
+        data: { status: 'ACTIVE', expiresAt: newExpiresAt },
+      }),
+      prisma.activityLog.create({
+        data: {
+          organizationId: sub.organizationId,
+          actorId: ownerId ?? sub.organizationId,
+          action: 'subscription.payment.succeeded',
+          targetType: 'subscription',
+          targetId: sub.id,
+        },
+      }),
+      ...(ownerId
+        ? [
+            prisma.notification.create({
+              data: {
+                userId: ownerId,
+                type: 'subscription.activated',
+                payload: {
+                  subscriptionId: sub.id,
+                  planId: sub.planId,
+                  amountRub: existing.amountRub,
+                  expiresAt: newExpiresAt.toISOString(),
+                },
+              },
+            }),
+          ]
+        : []),
     ]);
   } else if (body.event === 'payment.canceled') {
-    await prisma.payment.update({
-      where: { providerId },
-      data: { status: 'FAILED' },
-    });
+    const sub = await prisma.subscription.findUnique({ where: { id: existing.subscriptionId } });
+    await prisma.$transaction([
+      prisma.payment.update({
+        where: { providerId },
+        data: { status: 'FAILED' },
+      }),
+      ...(sub && sub.status === 'PENDING'
+        ? [prisma.subscription.update({ where: { id: sub.id }, data: { status: 'CANCELLED' } })]
+        : []),
+    ]);
   }
 
   return NextResponse.json({ ok: true });

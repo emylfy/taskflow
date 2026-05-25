@@ -65,25 +65,25 @@ const PLANS = [
     name: 'Бесплатный',
     price: '0 ₽',
     suffix: 'навсегда',
-    features: ['До 3 пользователей', 'До 2 проектов', 'Канбан и комментарии'],
+    features: ['До 3 пользователей', 'До 2 проектов', 'История версий 7 дней', 'Канбан и комментарии'],
     cta: 'Начать бесплатно',
     variant: 'secondary' as const,
   },
   {
     name: 'Команда',
-    price: '1 500 ₽',
+    price: '790 ₽',
     suffix: 'в месяц',
-    features: ['До 20 пользователей', 'Безлимит проектов', 'Совместное редактирование', 'История версий'],
+    features: ['До 20 пользователей', 'Безлимит проектов', 'История версий 90 дней', 'Журнал действий'],
     cta: 'Выбрать Команду',
     variant: 'primary' as const,
     badge: 'Популярный',
   },
   {
     name: 'Бизнес',
-    price: '4 500 ₽',
+    price: '2 900 ₽',
     suffix: 'в месяц',
-    features: ['Без ограничений', 'SLA 99,9 %', 'Единый вход (SSO)', 'Приоритетная поддержка'],
-    cta: 'Связаться',
+    features: ['Безлимит пользователей и проектов', 'SSO через Яндекс ID', 'Экспорт журнала (152-ФЗ)', 'Приоритетная поддержка'],
+    cta: 'Перейти на Бизнес',
     variant: 'secondary' as const,
   },
 ];
@@ -268,11 +268,11 @@ export default function LandingPage() {
             <span className={styles.footerCopy}>© 2026 TaskFlow. Все права защищены.</span>
           </div>
           <nav className={styles.footerNav}>
-            <a href="#">Политика персональных данных</a>
+            <a href="/legal/privacy">Политика персональных данных</a>
             <span className={styles.footerSep}>·</span>
-            <a href="#">Договор-оферта</a>
+            <a href="/legal/terms">Договор-оферта</a>
             <span className={styles.footerSep}>·</span>
-            <a href="#">152-ФЗ</a>
+            <a href="/legal/152-fz">152-ФЗ</a>
             <span className={styles.footerSep}>·</span>
             <a href="mailto:support@taskflow.ru">Поддержка</a>
           </nav>

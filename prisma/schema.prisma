@@ -219,6 +219,7 @@ model ChatMessage {
 // --------- Платежи ---------
 
 enum SubStatus {
+  PENDING
   ACTIVE
   EXPIRED
   CANCELLED
