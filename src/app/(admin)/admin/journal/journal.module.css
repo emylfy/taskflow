@@ -1,0 +1,152 @@
+.page {
+  padding: 24px 32px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.head h1 {
+  margin: 0 0 6px;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.sub {
+  margin: 0;
+  font-size: 14px;
+  color: #5B6670;
+}
+
+.filters {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: #F5F7F9;
+  border: 1px solid #E8EAEC;
+  border-radius: 10px;
+}
+
+.filterLabel {
+  display: block;
+  font-size: 12px;
+  color: #5B6670;
+  margin-bottom: 6px;
+}
+
+.select {
+  padding: 8px 10px;
+  font-size: 14px;
+  border: 1px solid #D8DCE0;
+  border-radius: 8px;
+  background: #fff;
+  min-width: 220px;
+}
+
+.resetLink {
+  font-size: 13px;
+  color: #5B6670;
+  text-decoration: underline;
+}
+
+.exportLock {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: #F5F7F9;
+  border: 1px dashed #C0C7CD;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #5B6670;
+}
+
+.upgradeLink {
+  color: #2B5FA4;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.table {
+  border: 1px solid #E8EAEC;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.tableHead {
+  display: grid;
+  grid-template-columns: 130px 200px 1fr 220px;
+  padding: 12px 16px;
+  background: #F5F7F9;
+  border-bottom: 1px solid #E8EAEC;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #5B6670;
+  font-weight: 500;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 130px 200px 1fr 220px;
+  padding: 12px 16px;
+  align-items: center;
+  border-bottom: 1px solid #E8EAEC;
+  font-size: 14px;
+}
+
+.row:last-child {
+  border-bottom: 0;
+}
+
+.cellTime {
+  color: #5B6670;
+  font-variant-numeric: tabular-nums;
+}
+
+.cellActor {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cellAction {
+  color: #1A1D23;
+}
+
+.cellTarget {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.targetType {
+  padding: 2px 8px;
+  background: #EEF0F3;
+  border-radius: 4px;
+  color: #5B6670;
+  font-size: 12px;
+}
+
+.targetId {
+  color: #8B939C;
+  font-family: 'SF Mono', Menlo, monospace;
+  font-size: 12px;
+}
+
+.empty {
+  padding: 32px 16px;
+  text-align: center;
+  color: #5B6670;
+  font-size: 14px;
+}
