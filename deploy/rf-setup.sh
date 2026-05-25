@@ -29,17 +29,14 @@ IP=$(curl -s --max-time 10 https://api.ipify.org || true)
 NIP="${IP}.nip.io"
 echo "[rf-setup] публичный IP=$IP, домен=$NIP"
 
-# --- 3. MTU 1280 + MSS-клэмп для контейнеров (+ закрепить на ребут) ---
+# --- 3. MTU 1280 на интерфейсе (MSS-клэмп — позже, после установки Docker,
+#         т.к. модуль netfilter TCPMSS поднимает Docker) ---
 IFACE=$(ip route show default | awk '/default/{print $5; exit}')
 IFACE=${IFACE:-eth0}
 ip link set "$IFACE" mtu 1280 || true
-iptables -t mangle -C FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss 1240 2>/dev/null \
-  || iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss 1240
-( crontab -l 2>/dev/null | grep -v 'taskflow-net'; \
-  echo "@reboot /sbin/ip link set $IFACE mtu 1280  # taskflow-net"; \
-  echo '@reboot /sbin/iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss 1240  # taskflow-net' \
-) | crontab -
-echo "[rf-setup] MTU 1280 + MSS 1240 на $IFACE (закреплено)"
+( crontab -l 2>/dev/null | grep -v 'taskflow-mtu'; \
+  echo "@reboot /sbin/ip link set $IFACE mtu 1280  # taskflow-mtu" ) | crontab -
+echo "[rf-setup] MTU 1280 на $IFACE (закреплено)"
 
 # --- 4. swap, если RAM < 4 ГБ ---
 mem_mb=$(free -m | awk '/^Mem:/{print $2}')
@@ -64,6 +61,14 @@ cat > /etc/docker/daemon.json <<'EOF'
 EOF
 systemctl restart docker; sleep 3
 echo "[rf-setup] docker: $(docker --version)"
+
+# MSS-клэмп для трафика контейнеров (теперь модули netfilter подняты Docker'ом)
+modprobe xt_TCPMSS 2>/dev/null || true
+iptables -t mangle -C FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss 1240 2>/dev/null \
+  || iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss 1240 || true
+( crontab -l 2>/dev/null | grep -v 'taskflow-mss'; \
+  echo '@reboot /sbin/iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss 1240  # taskflow-mss' ) | crontab -
+echo "[rf-setup] MSS-клэмп 1240 (закреплено)"
 
 # --- 7. .env (генерим один раз) ---
 if [ ! -f .env ]; then
