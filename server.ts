@@ -16,9 +16,14 @@ async function start() {
     handle(req, res);
   });
 
-  httpServer.on('upgrade', (req, socket, head) => {
+  httpServer.on('upgrade', async (req, socket, head) => {
     // socket is a Duplex stream (net.Socket at runtime); handle passes it to ws upgrade.
-    if (handleCollaborationUpgrade(req, socket as import('node:net').Socket, head)) return;
+    try {
+      const handled = await handleCollaborationUpgrade(req, socket as import('node:net').Socket, head);
+      if (handled) return;
+    } catch (err) {
+      console.error('upgrade error:', err);
+    }
     socket.destroy();
   });
 
