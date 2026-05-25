@@ -75,8 +75,9 @@ export function RegisterForm() {
       </Button>
       {error && <div className={styles.error}>{error}</div>}
       <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 14, lineHeight: 1.5 }}>
-        Продолжая, вы соглашаетесь с <Link href="#" className={styles.link}>договором-офертой</Link> и{' '}
-        <Link href="#" className={styles.link}>политикой обработки персональных данных</Link>.
+        Продолжая, вы соглашаетесь с{' '}
+        <Link href="/legal/terms" className={styles.link}>договором-офертой</Link> и{' '}
+        <Link href="/legal/privacy" className={styles.link}>политикой обработки персональных данных</Link>.
       </p>
     </form>
   );

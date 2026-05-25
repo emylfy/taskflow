@@ -34,8 +34,8 @@ export default function LoginPage() {
       </main>
       <footer className={styles.footer}>
         <span>© 2026 TaskFlow</span>
-        <Link href="#">Политика персональных данных</Link>
-        <Link href="#">Договор-оферта</Link>
+        <Link href="/legal/privacy">Политика персональных данных</Link>
+        <Link href="/legal/terms">Договор-оферта</Link>
         <div style={{ flex: 1 }} />
         <span>Данные в РФ</span>
       </footer>
