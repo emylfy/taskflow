@@ -169,11 +169,7 @@ export const Board: React.FC<BoardProps> = ({
         </div>
       </div>
 
-      {view !== 'kanban' ? (
-        <div className={styles.placeholder}>
-          Вид «{view === 'list' ? 'Список' : 'Календарь'}» доступен в рабочем варианте приложения.
-        </div>
-      ) : (
+      {view === 'kanban' ? (
         <div className={styles.board}>
           <DndContext
             sensors={sensors}
@@ -187,13 +183,76 @@ export const Board: React.FC<BoardProps> = ({
                   key={col.id}
                   column={col}
                   onOpenTask={(taskId) => router.push(`/projects/${projectId}/tasks/${taskId}`)}
+                  onAddTask={async (columnId) => {
+                    const title = window.prompt(`Название новой задачи в «${col.title}»`);
+                    if (!title || !title.trim()) return;
+                    try {
+                      await createTask({
+                        projectId,
+                        title: title.trim(),
+                        status: STATUS_BY_COLUMN[columnId],
+                      });
+                      router.refresh();
+                    } catch (e) {
+                      alert((e as Error).message);
+                    }
+                  }}
                 />
               ))}
             </div>
-            <DragOverlay>
-              {activeTask ? <TaskCard task={activeTask} /> : null}
-            </DragOverlay>
+            <DragOverlay>{activeTask ? <TaskCard task={activeTask} /> : null}</DragOverlay>
           </DndContext>
+        </div>
+      ) : view === 'list' ? (
+        <div className={styles.board} style={{ padding: 16 }}>
+          {columns.map((col) => (
+            <div key={col.id} style={{ marginBottom: 24 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                <span
+                  style={{
+                    display: 'inline-block',
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    background: col.color,
+                  }}
+                />
+                <span style={{ fontWeight: 600 }}>{col.title}</span>
+                <span style={{ color: '#8B939C', fontSize: 13 }}>· {col.tasks.length}</span>
+              </div>
+              {col.tasks.length === 0 ? (
+                <div style={{ color: '#8B939C', fontSize: 13, padding: '8px 0' }}>Нет задач</div>
+              ) : (
+                <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                  {col.tasks.map((t) => (
+                    <li key={t.id} style={{ borderTop: '1px solid #E8EAEC' }}>
+                      <Link
+                        href={`/projects/${projectId}/tasks/${t.id}`}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 12,
+                          padding: '12px 0',
+                          textDecoration: 'none',
+                          color: '#1A1D23',
+                        }}
+                      >
+                        <span style={{ flex: 1 }}>{t.title}</span>
+                        {t.dueLabel ? (
+                          <span style={{ color: '#5B6670', fontSize: 13 }}>{t.dueLabel}</span>
+                        ) : null}
+                        <AvatarStack names={t.assignees} size={20} max={3} />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className={styles.placeholder}>
+          Календарный вид появится в следующей версии. Пока пользуйтесь канбаном или списком.
         </div>
       )}
     </div>

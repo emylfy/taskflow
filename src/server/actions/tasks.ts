@@ -75,10 +75,10 @@ export async function moveTask(input: {
   const user = await requireUser();
   const task = await prisma.task.findUnique({
     where: { id: input.taskId },
-    select: { id: true, projectId: true, status: true, orderIndex: true },
+    select: { id: true, projectId: true, status: true, orderIndex: true, assigneeId: true },
   });
   if (!task) throw new Error('Задача не найдена');
-  await assertProjectAccess(user.id, task.projectId);
+  const { project } = await assertProjectAccess(user.id, task.projectId);
 
   const updated = await prisma.$transaction(async (tx) => {
     if (task.status !== input.status) {
@@ -112,10 +112,34 @@ export async function moveTask(input: {
       }
     }
 
-    return tx.task.update({
+    const result = await tx.task.update({
       where: { id: input.taskId },
       data: { status: input.status, orderIndex: input.orderIndex },
     });
+
+    if (task.status !== input.status) {
+      await tx.activityLog.create({
+        data: {
+          organizationId: project.organizationId,
+          actorId: user.id,
+          action: `task.status.${input.status.toLowerCase()}`,
+          targetType: 'task',
+          targetId: input.taskId,
+        },
+      });
+      // Если статус сменился на DONE и задача назначена на кого-то
+      // отличного от текущего юзера — уведомим автора назначения.
+      if (input.status === 'DONE' && task.assigneeId && task.assigneeId !== user.id) {
+        await tx.notification.create({
+          data: {
+            userId: task.assigneeId,
+            type: 'task.completed',
+            payload: { taskId: input.taskId, projectId: task.projectId, by: user.name ?? user.email },
+          },
+        });
+      }
+    }
+    return result;
   });
 
   broadcast(`project-${task.projectId}`, { type: 'task:moved', payload: updated });
@@ -134,13 +158,36 @@ export async function updateTask(input: {
   const user = await requireUser();
   const existing = await prisma.task.findUnique({
     where: { id: input.taskId },
-    select: { projectId: true },
+    select: { projectId: true, assigneeId: true, project: { select: { organizationId: true } } },
   });
   if (!existing) throw new Error('Задача не найдена');
   await assertProjectAccess(user.id, existing.projectId);
 
   const { taskId, ...data } = input;
   const task = await prisma.task.update({ where: { id: taskId }, data });
+
+  // Если сменился исполнитель — лог + уведомление новому исполнителю.
+  if (input.assigneeId !== undefined && input.assigneeId !== existing.assigneeId) {
+    await prisma.activityLog.create({
+      data: {
+        organizationId: existing.project.organizationId,
+        actorId: user.id,
+        action: 'task.assignee.change',
+        targetType: 'task',
+        targetId: taskId,
+      },
+    });
+    if (input.assigneeId && input.assigneeId !== user.id) {
+      await prisma.notification.create({
+        data: {
+          userId: input.assigneeId,
+          type: 'task.assigned',
+          payload: { taskId, projectId: existing.projectId, by: user.name ?? user.email },
+        },
+      });
+    }
+  }
+
   broadcast(`project-${existing.projectId}`, { type: 'task:updated', payload: task });
   revalidatePath(`/projects/${existing.projectId}/tasks/${taskId}`);
   return task;
@@ -150,11 +197,22 @@ export async function deleteTask(taskId: string) {
   const user = await requireUser();
   const existing = await prisma.task.findUnique({
     where: { id: taskId },
-    select: { projectId: true },
+    select: { projectId: true, project: { select: { organizationId: true } } },
   });
   if (!existing) throw new Error('Задача не найдена');
   await assertProjectAccess(user.id, existing.projectId);
-  await prisma.task.delete({ where: { id: taskId } });
+  await prisma.$transaction([
+    prisma.task.delete({ where: { id: taskId } }),
+    prisma.activityLog.create({
+      data: {
+        organizationId: existing.project.organizationId,
+        actorId: user.id,
+        action: 'task.delete',
+        targetType: 'task',
+        targetId: taskId,
+      },
+    }),
+  ]);
   broadcast(`project-${existing.projectId}`, { type: 'task:deleted', payload: { id: taskId } });
   revalidatePath(`/projects/${existing.projectId}`);
 }

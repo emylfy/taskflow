@@ -1,96 +1,203 @@
 import * as React from 'react';
+import Link from 'next/link';
 import { I } from '@/components/icons/Icons';
 import { Avatar } from '@/components/ui/Avatar';
 import { ProjectIcon } from '@/components/ui/ProjectIcon';
 import { StatusPill } from '@/components/ui/Badge';
+import type { StatusKey } from '@/components/ui/Badge';
+import { prisma } from '@/lib/prisma';
+import { requireUser } from '@/lib/session';
+import type { TaskStatus } from '@prisma/client';
 import styles from './search.module.css';
 
 export const metadata = { title: 'Поиск — TaskFlow' };
+export const dynamic = 'force-dynamic';
 
-export default function SearchPage() {
+const STATUS_KEY: Record<TaskStatus, StatusKey> = {
+  TODO: 'todo',
+  IN_PROGRESS: 'doing',
+  IN_REVIEW: 'review',
+  DONE: 'done',
+};
+
+function highlight(text: string, query: string): React.ReactNode {
+  if (!query) return text;
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return text;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <mark className={styles.hl}>{text.slice(idx, idx + query.length)}</mark>
+      {text.slice(idx + query.length)}
+    </>
+  );
+}
+
+export default async function SearchPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const user = await requireUser();
+  const sp = await searchParams;
+  const q = (typeof sp.q === 'string' ? sp.q : '').trim();
+
+  // Узнаём организации пользователя — поиск ограничен ими.
+  const memberships = await prisma.member.findMany({
+    where: { userId: user.id },
+    select: { organizationId: true, organization: { select: { name: true } } },
+  });
+  const orgIds = memberships.map((m) => m.organizationId);
+  const orgName = memberships[0]?.organization.name ?? 'TaskFlow';
+
+  let tasks: Awaited<ReturnType<typeof findTasks>> = [];
+  let projects: Awaited<ReturnType<typeof findProjects>> = [];
+  let people: Awaited<ReturnType<typeof findPeople>> = [];
+
+  async function findTasks() {
+    if (!q || orgIds.length === 0) return [];
+    return prisma.task.findMany({
+      where: {
+        project: { organizationId: { in: orgIds } },
+        title: { contains: q, mode: 'insensitive' },
+      },
+      include: {
+        project: { select: { id: true, name: true } },
+        assignee: { select: { id: true, name: true } },
+      },
+      take: 10,
+    });
+  }
+  async function findProjects() {
+    if (!q || orgIds.length === 0) return [];
+    return prisma.project.findMany({
+      where: {
+        organizationId: { in: orgIds },
+        OR: [
+          { name: { contains: q, mode: 'insensitive' } },
+          { description: { contains: q, mode: 'insensitive' } },
+        ],
+      },
+      include: { _count: { select: { tasks: true } } },
+      take: 10,
+    });
+  }
+  async function findPeople() {
+    if (!q || orgIds.length === 0) return [];
+    return prisma.user.findMany({
+      where: {
+        members: { some: { organizationId: { in: orgIds } } },
+        OR: [
+          { name: { contains: q, mode: 'insensitive' } },
+          { email: { contains: q, mode: 'insensitive' } },
+        ],
+      },
+      select: { id: true, name: true, email: true },
+      take: 10,
+    });
+  }
+
+  if (q) {
+    [tasks, projects, people] = await Promise.all([findTasks(), findProjects(), findPeople()]);
+  }
+
+  const totalFound = tasks.length + projects.length + people.length;
+
   return (
     <div className={styles.page}>
       <div className={styles.modal}>
-        <div className={styles.input}>
+        <form className={styles.input} action="/search" method="get">
           <I.Search size={20} stroke="#5B6670" />
-          <input defaultValue="макет" placeholder="Поиск по задачам, проектам, участникам…" />
+          <input
+            name="q"
+            defaultValue={q}
+            placeholder="Поиск по задачам, проектам, участникам…"
+            autoFocus
+          />
           <span className={styles.esc}>Esc</span>
-        </div>
+        </form>
         <div className={styles.results}>
-          <div className={styles.group}>
-            <div className={styles.groupHead}>
-              <span>Задачи</span>
-              <span className={styles.groupCount}>· 4</span>
+          {!q ? (
+            <div style={{ padding: 24, color: '#5B6670' }}>
+              Введите запрос — найдём задачи, проекты и участников вашей организации.
             </div>
-            <div className={`${styles.row} ${styles.rowActive}`}>
-              <I.CheckCircle size={16} stroke="#5B6670" />
-              <div className={styles.rowInfo}>
-                <div className={styles.rowTitle}>
-                  Подготовить <mark className={styles.hl}>макет</mark>ы главной страницы
-                </div>
-                <div className={styles.rowSub}>Редизайн сайта · Иван Соколов</div>
-              </div>
-              <StatusPill status="doing" size="sm" />
-            </div>
-            <div className={styles.row}>
-              <I.CheckCircle size={16} stroke="#5B6670" />
-              <div className={styles.rowInfo}>
-                <div className={styles.rowTitle}>
-                  Ревью <mark className={styles.hl}>макет</mark>ов раздела тарифов
-                </div>
-                <div className={styles.rowSub}>Редизайн сайта · Мария Петрова</div>
-              </div>
-              <StatusPill status="review" size="sm" />
-            </div>
-            <div className={styles.row}>
-              <I.CheckCircle size={16} stroke="#5B6670" />
-              <div className={styles.rowInfo}>
-                <div className={styles.rowTitle}>
-                  Собрать <mark className={styles.hl}>макет</mark>ы в прототип Figma
-                </div>
-                <div className={styles.rowSub}>Запуск мобильного приложения · Елена Куликова</div>
-              </div>
-              <StatusPill status="todo" size="sm" />
-            </div>
-          </div>
+          ) : null}
 
-          <div className={styles.group}>
-            <div className={styles.groupHead}>
-              <span>Проекты</span>
-              <span className={styles.groupCount}>· 1</span>
+          {q && totalFound === 0 ? (
+            <div style={{ padding: 24, color: '#5B6670' }}>
+              Ничего не найдено по запросу «{q}». Попробуйте другую формулировку.
             </div>
-            <div className={styles.row}>
-              <ProjectIcon name="Редизайн сайта" size={22} />
-              <div className={styles.rowInfo}>
-                <div className={styles.rowTitle}>Редизайн сайта</div>
-                <div className={styles.rowSub}>48 задач · 5 участников · Активен</div>
-              </div>
-            </div>
-          </div>
+          ) : null}
 
-          <div className={styles.group}>
-            <div className={styles.groupHead}>
-              <span>Участники</span>
-              <span className={styles.groupCount}>· 2</span>
-            </div>
-            <div className={styles.row}>
-              <Avatar name="Мария Петрова" size={24} />
-              <div className={styles.rowInfo}>
-                <div className={styles.rowTitle}>Мария Петрова</div>
-                <div className={styles.rowSub}>Дизайнер · maria.petrova@taskflow.ru</div>
+          {tasks.length > 0 && (
+            <div className={styles.group}>
+              <div className={styles.groupHead}>
+                <span>Задачи</span>
+                <span className={styles.groupCount}>· {tasks.length}</span>
               </div>
+              {tasks.map((t) => (
+                <Link
+                  key={t.id}
+                  href={`/projects/${t.projectId}/tasks/${t.id}`}
+                  className={styles.row}
+                  style={{ textDecoration: 'none', color: 'inherit' }}
+                >
+                  <I.CheckCircle size={16} stroke="#5B6670" />
+                  <div className={styles.rowInfo}>
+                    <div className={styles.rowTitle}>{highlight(t.title, q)}</div>
+                    <div className={styles.rowSub}>
+                      {t.project.name} {t.assignee ? `· ${t.assignee.name}` : ''}
+                    </div>
+                  </div>
+                  <StatusPill status={STATUS_KEY[t.status]} size="sm" />
+                </Link>
+              ))}
             </div>
-          </div>
+          )}
+
+          {projects.length > 0 && (
+            <div className={styles.group}>
+              <div className={styles.groupHead}>
+                <span>Проекты</span>
+                <span className={styles.groupCount}>· {projects.length}</span>
+              </div>
+              {projects.map((p) => (
+                <Link
+                  key={p.id}
+                  href={`/projects/${p.id}`}
+                  className={styles.row}
+                  style={{ textDecoration: 'none', color: 'inherit' }}
+                >
+                  <ProjectIcon name={p.name} size={22} />
+                  <div className={styles.rowInfo}>
+                    <div className={styles.rowTitle}>{highlight(p.name, q)}</div>
+                    <div className={styles.rowSub}>{p._count.tasks} задач</div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {people.length > 0 && (
+            <div className={styles.group}>
+              <div className={styles.groupHead}>
+                <span>Участники</span>
+                <span className={styles.groupCount}>· {people.length}</span>
+              </div>
+              {people.map((u) => (
+                <div key={u.id} className={styles.row}>
+                  <Avatar name={u.name} size={24} />
+                  <div className={styles.rowInfo}>
+                    <div className={styles.rowTitle}>{highlight(u.name, q)}</div>
+                    <div className={styles.rowSub}>{u.email}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <div className={styles.foot}>
-          <span>
-            <kbd className={styles.kbd}>↑↓</kbd> выбрать
-          </span>
-          <span>
-            <kbd className={styles.kbd}>⏎</kbd> открыть
-          </span>
-          <div style={{ flex: 1 }} />
-          <span>Поиск по организации «Команда TaskFlow»</span>
+          <span>Поиск по организации «{orgName}»</span>
         </div>
       </div>
     </div>

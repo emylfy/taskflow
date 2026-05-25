@@ -1,96 +1,197 @@
 import * as React from 'react';
+import Link from 'next/link';
 import { I } from '@/components/icons/Icons';
-import { Button } from '@/components/ui/Button';
 import { Avatar } from '@/components/ui/Avatar';
 import { ProjectIcon } from '@/components/ui/ProjectIcon';
-import { StatusPill, Chip, PriorityBar } from '@/components/ui/Badge';
+import { StatusPill, PriorityBar } from '@/components/ui/Badge';
 import type { StatusKey, PrioKey } from '@/components/ui/Badge';
+import { prisma } from '@/lib/prisma';
+import { requireUser } from '@/lib/session';
+import { moveTask } from '@/server/actions/tasks';
+import type { TaskStatus, Priority } from '@prisma/client';
 import styles from './mytasks.module.css';
 
 export const metadata = { title: 'Мои задачи — TaskFlow' };
+export const dynamic = 'force-dynamic';
 
-type Row = {
-  done: boolean;
-  title: string;
-  project: string;
-  priority: PrioKey;
-  due: string;
-  assignee: string;
-  overdue?: boolean;
-  status?: StatusKey;
+type Filter = 'all' | 'today' | 'week' | 'overdue';
+
+const STATUS_KEY: Record<TaskStatus, StatusKey> = {
+  TODO: 'todo',
+  IN_PROGRESS: 'doing',
+  IN_REVIEW: 'review',
+  DONE: 'done',
 };
 
-const TASKS: Row[] = [
-  { done: true, title: 'Составить бриф на редизайн главной', project: 'Редизайн сайта', priority: 'normal', due: 'Сегодня', assignee: 'Иван Соколов' },
-  { done: false, title: 'Подготовить макеты главной страницы', project: 'Редизайн сайта', priority: 'high', due: 'Сегодня', assignee: 'Иван Соколов', status: 'doing' },
-  { done: false, title: 'Согласовать техническое задание с заказчиком', project: 'Редизайн сайта', priority: 'urgent', due: 'Вчера · просрочено', assignee: 'Иван Соколов', overdue: true, status: 'review' },
-  { done: false, title: 'Настроить развёртывание через Docker Compose', project: 'Запуск мобильного приложения', priority: 'high', due: 'Завтра', assignee: 'Иван Соколов', status: 'doing' },
-  { done: false, title: 'Обновить схему базы данных под отчёты', project: 'Внутренняя платформа', priority: 'normal', due: 'Чт, 7 мая', assignee: 'Иван Соколов', status: 'todo' },
-  { done: false, title: 'Провести ревью кода модуля уведомлений', project: 'Внутренняя платформа', priority: 'normal', due: 'Пт, 8 мая', assignee: 'Иван Соколов', status: 'todo' },
-  { done: false, title: 'Подготовить черновик руководства пользователя', project: 'Документация и обучение', priority: 'low', due: 'Пн, 11 мая', assignee: 'Иван Соколов', status: 'doing' },
-  { done: false, title: 'Встреча с подрядчиком по видеоролику', project: 'Маркетинговая кампания Q2 2026', priority: 'normal', due: 'Вт, 12 мая · 11:00', assignee: 'Иван Соколов', status: 'todo' },
-  { done: false, title: 'Обработать обратную связь от пользователей', project: 'Редизайн сайта', priority: 'low', due: 'Ср, 13 мая', assignee: 'Иван Соколов', status: 'todo' },
-  { done: false, title: 'Подготовить презентацию итогов спринта', project: 'Внутренняя платформа', priority: 'high', due: 'Пт, 15 мая', assignee: 'Иван Соколов', status: 'todo' },
-];
+const PRIO_KEY: Record<Priority, PrioKey> = {
+  LOW: 'low',
+  MEDIUM: 'normal',
+  HIGH: 'high',
+  CRITICAL: 'urgent',
+};
 
-const TABS = [
-  { t: 'Все', n: 12 },
-  { t: 'Сегодня', n: 3, active: true },
-  { t: 'На этой неделе', n: 7 },
-  { t: 'Просрочены', n: 2 },
-];
+function startOfDay(d: Date): Date {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
 
-export default function MyTasksPage() {
+function endOfDay(d: Date): Date {
+  const x = new Date(d);
+  x.setHours(23, 59, 59, 999);
+  return x;
+}
+
+function endOfWeek(d: Date): Date {
+  const x = startOfDay(d);
+  const dayOfWeek = (x.getDay() + 6) % 7; // понедельник = 0
+  x.setDate(x.getDate() + (6 - dayOfWeek));
+  x.setHours(23, 59, 59, 999);
+  return x;
+}
+
+function formatDue(d: Date | null): { label: string; overdue: boolean } {
+  if (!d) return { label: 'без срока', overdue: false };
+  const today = startOfDay(new Date());
+  const target = startOfDay(d);
+  const diffDays = Math.round((target.getTime() - today.getTime()) / (24 * 60 * 60 * 1000));
+  if (diffDays === 0) return { label: 'Сегодня', overdue: false };
+  if (diffDays === 1) return { label: 'Завтра', overdue: false };
+  if (diffDays === -1) return { label: 'Вчера · просрочено', overdue: true };
+  if (diffDays < 0) return { label: `просрочено на ${-diffDays} д.`, overdue: true };
+  if (diffDays <= 7) {
+    const wd = d.toLocaleDateString('ru-RU', { weekday: 'short' });
+    const dm = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+    return { label: `${wd}, ${dm}`, overdue: false };
+  }
+  return { label: d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }), overdue: false };
+}
+
+export default async function MyTasksPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const user = await requireUser();
+  const sp = await searchParams;
+  const filter = ((typeof sp.filter === 'string' ? sp.filter : 'all') as Filter) ?? 'all';
+
+  const now = new Date();
+  const todayStart = startOfDay(now);
+  const todayEnd = endOfDay(now);
+  const weekEnd = endOfWeek(now);
+
+  // Базовая выборка: все задачи где assignee = текущий пользователь.
+  const allRows = await prisma.task.findMany({
+    where: { assigneeId: user.id, status: { not: 'DONE' } },
+    include: { project: { select: { id: true, name: true } } },
+    orderBy: [{ dueDate: { sort: 'asc', nulls: 'last' } }, { priority: 'desc' }],
+  });
+
+  const counts = {
+    all: allRows.length,
+    today: allRows.filter((t) => t.dueDate && t.dueDate >= todayStart && t.dueDate <= todayEnd).length,
+    week: allRows.filter((t) => t.dueDate && t.dueDate >= todayStart && t.dueDate <= weekEnd).length,
+    overdue: allRows.filter((t) => t.dueDate && t.dueDate < todayStart).length,
+  };
+
+  let filtered = allRows;
+  if (filter === 'today') {
+    filtered = allRows.filter((t) => t.dueDate && t.dueDate >= todayStart && t.dueDate <= todayEnd);
+  } else if (filter === 'week') {
+    filtered = allRows.filter((t) => t.dueDate && t.dueDate >= todayStart && t.dueDate <= weekEnd);
+  } else if (filter === 'overdue') {
+    filtered = allRows.filter((t) => t.dueDate && t.dueDate < todayStart);
+  }
+
+  const completedThisMonth = await prisma.task.count({
+    where: {
+      assigneeId: user.id,
+      status: 'DONE',
+      updatedAt: { gte: new Date(now.getFullYear(), now.getMonth(), 1) },
+    },
+  });
+
+  const TABS: { key: Filter; t: string; n: number }[] = [
+    { key: 'all', t: 'Все', n: counts.all },
+    { key: 'today', t: 'Сегодня', n: counts.today },
+    { key: 'week', t: 'На этой неделе', n: counts.week },
+    { key: 'overdue', t: 'Просрочены', n: counts.overdue },
+  ];
+
+  // Server Action для отметки задачи выполненной.
+  async function markDone(taskId: string) {
+    'use server';
+    await moveTask({ taskId, status: 'DONE', orderIndex: 0 });
+  }
+
   return (
     <div className={styles.page}>
       <div className={styles.head}>
         <div>
           <h1>Мои задачи</h1>
-          <div className={styles.sub}>12 активных · 2 просрочены · 48 завершены за месяц</div>
+          <div className={styles.sub}>
+            {counts.all} активных · {counts.overdue} просрочены · {completedThisMonth} завершены за месяц
+          </div>
         </div>
         <div style={{ flex: 1 }} />
-        <Button variant="secondary" leading={<I.Calendar size={15} stroke="#5B6670" />}>
-          Календарь
-        </Button>
-      </div>
-
-      <div className={styles.chips}>
-        <Chip>Проект: все</Chip>
-        <Chip active>Статус: активные</Chip>
-        <Chip>Приоритет: любой</Chip>
-        <Chip>Срок: неделя</Chip>
-        <span className={styles.chipSep} />
-        <Chip>+ Фильтр</Chip>
       </div>
 
       <div className={styles.tabs}>
         {TABS.map((t) => (
-          <div key={t.t} className={`${styles.tab} ${t.active ? styles.tabActive : ''}`}>
+          <Link
+            key={t.key}
+            href={`/my-tasks?filter=${t.key}`}
+            className={`${styles.tab} ${filter === t.key ? styles.tabActive : ''}`}
+          >
             {t.t}
-            <span className={`${styles.tabBadge} ${t.active ? styles.tabBadgeActive : ''}`}>{t.n}</span>
-          </div>
+            <span className={`${styles.tabBadge} ${filter === t.key ? styles.tabBadgeActive : ''}`}>{t.n}</span>
+          </Link>
         ))}
       </div>
 
       <div className={styles.list}>
-        {TASKS.map((t) => (
-          <div key={t.title} className={`${styles.row} ${t.overdue ? styles.overdue : ''}`}>
-            <div className={`${styles.check} ${t.done ? styles.checkOn : ''}`}>
-              {t.done && <I.Check size={11} stroke="#fff" sw={3} />}
-            </div>
-            <PriorityBar level={t.priority} thickness={3} />
-            <div className={styles.titleWrap}>
-              <div className={`${styles.rowTitle} ${t.done ? styles.rowTitleDone : ''}`}>{t.title}</div>
-            </div>
-            <div className={styles.project}>
-              <ProjectIcon name={t.project} size={14} />
-              {t.project}
-            </div>
-            {t.status && <StatusPill status={t.status} size="sm" />}
-            <div className={`${styles.due} ${t.overdue ? styles.dueOverdue : ''}`}>{t.due}</div>
-            <Avatar name={t.assignee} size={24} />
+        {filtered.length === 0 ? (
+          <div style={{ padding: 32, color: '#5B6670', textAlign: 'center' }}>
+            В этой категории нет задач.
           </div>
-        ))}
+        ) : null}
+        {filtered.map((t) => {
+          const due = formatDue(t.dueDate);
+          return (
+            <div key={t.id} className={`${styles.row} ${due.overdue ? styles.overdue : ''}`}>
+              <form action={markDone.bind(null, t.id)}>
+                <button
+                  type="submit"
+                  className={styles.check}
+                  aria-label="Отметить выполненной"
+                  style={{ border: 0, background: 'transparent', cursor: 'pointer', padding: 0 }}
+                />
+              </form>
+              <PriorityBar level={PRIO_KEY[t.priority]} thickness={3} />
+              <div className={styles.titleWrap}>
+                <Link
+                  href={`/projects/${t.projectId}/tasks/${t.id}`}
+                  className={styles.rowTitle}
+                  style={{ textDecoration: 'none', color: 'inherit' }}
+                >
+                  {t.title}
+                </Link>
+              </div>
+              <Link
+                href={`/projects/${t.projectId}`}
+                className={styles.project}
+                style={{ textDecoration: 'none', color: 'inherit' }}
+              >
+                <ProjectIcon name={t.project.name} size={14} />
+                {t.project.name}
+              </Link>
+              <StatusPill status={STATUS_KEY[t.status]} size="sm" />
+              <div className={`${styles.due} ${due.overdue ? styles.dueOverdue : ''}`}>{due.label}</div>
+              <Avatar name={user.name ?? user.email} size={24} />
+            </div>
+          );
+        })}
       </div>
     </div>
   );

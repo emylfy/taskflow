@@ -14,9 +14,13 @@ export type ColumnData = {
   tasks: TaskCardData[];
 };
 
-type ColumnProps = { column: ColumnData; onOpenTask?: (id: string) => void };
+type ColumnProps = {
+  column: ColumnData;
+  onOpenTask?: (id: string) => void;
+  onAddTask?: (columnId: string) => void;
+};
 
-export const Column: React.FC<ColumnProps> = ({ column, onOpenTask }) => {
+export const Column: React.FC<ColumnProps> = ({ column, onOpenTask, onAddTask }) => {
   const { setNodeRef, isOver } = useDroppable({ id: column.id });
 
   return (
@@ -26,10 +30,14 @@ export const Column: React.FC<ColumnProps> = ({ column, onOpenTask }) => {
         <span className={styles.title}>{column.title}</span>
         <span className={styles.count}>{column.tasks.length}</span>
         <div style={{ flex: 1 }} />
-        <button className={styles.iconBtn} aria-label="Добавить задачу">
+        <button
+          className={styles.iconBtn}
+          aria-label="Добавить задачу"
+          type="button"
+          onClick={() => onAddTask?.(column.id)}
+        >
           <I.Plus size={14} stroke="#8B939C" />
         </button>
-        <I.MoreH size={14} stroke="#8B939C" />
       </div>
       <div
         ref={setNodeRef}
