@@ -33,7 +33,7 @@ services:
 
   caddy:
     image: caddy:2-alpine
-    depends_on: [app]
+    depends_on: [app, adminer]
     ports:
       - "80:80"
       - "443:443"
@@ -41,6 +41,18 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
       - caddy-config:/config
+    restart: unless-stopped
+
+  # Adminer — веб-интерфейс к PostgreSQL для демонстрации схемы БД
+  # комиссии. Закрыт Basic Auth в Caddy. На время защиты — оставить,
+  # после защиты убрать командой `docker compose stop adminer && docker
+  # compose rm -f adminer`.
+  adminer:
+    image: adminer:4
+    depends_on: [db]
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+      ADMINER_DESIGN: pepa-linha-dark
     restart: unless-stopped
 
 volumes:

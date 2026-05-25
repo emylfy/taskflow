@@ -1,9 +1,23 @@
 taskflow.ru, www.taskflow.ru {
     encode zstd gzip
-    reverse_proxy app:3000 {
-        header_up Host {host}
-        header_up X-Real-IP {remote_host}
+
+    # Adminer — закрыт Basic Auth. Логин: admin / Пароль: diploma2026.
+    # На время защиты комиссии остаётся, после защиты — удалить блок и
+    # сервис adminer из docker-compose.yml.
+    handle_path /db/* {
+        basic_auth {
+            admin $2a$14$2fKxKL3uIDFzTrTB5ePnaOX7rCYYCquV/gim6alPpmNqka9xb9yce
+        }
+        reverse_proxy adminer:8080
     }
+
+    handle {
+        reverse_proxy app:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+        }
+    }
+
     header {
         Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
         X-Content-Type-Options "nosniff"
