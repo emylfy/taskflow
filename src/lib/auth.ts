@@ -2,22 +2,38 @@ import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { magicLink } from 'better-auth/plugins';
 import { genericOAuth } from 'better-auth/plugins';
-import nodemailer from 'nodemailer';
+import nodemailer, { type Transporter } from 'nodemailer';
 import { prisma } from './prisma';
 
-const smtp = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT ?? 465),
-  secure: true,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASSWORD,
-  },
-});
+let smtpTransporter: Transporter | null | undefined;
+function getSmtp(): Transporter | null {
+  if (smtpTransporter !== undefined) return smtpTransporter;
+  if (!process.env.SMTP_HOST) {
+    smtpTransporter = null;
+    return null;
+  }
+  smtpTransporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT ?? 465),
+    secure: Number(process.env.SMTP_PORT ?? 465) === 465,
+    auth: process.env.SMTP_USER
+      ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD }
+      : undefined,
+  });
+  return smtpTransporter;
+}
 
 async function sendMagicLink(email: string, url: string) {
+  const smtp = getSmtp();
+  if (!smtp) {
+    // SMTP не настроен: не падаем, чтобы локальная разработка и DEMO_MODE
+    // оставались работоспособными. Печатаем magic-link в консоль —
+    // удобно для теста потока без поднятого почтового сервера.
+    console.log(`[magic-link] ${email}\n  -> ${url}\n  (SMTP_HOST не задан, письмо не отправлено)`);
+    return;
+  }
   await smtp.sendMail({
-    from: `"TaskFlow" <${process.env.SMTP_USER}>`,
+    from: `"TaskFlow" <${process.env.SMTP_USER ?? 'noreply@taskflow.ru'}>`,
     to: email,
     subject: 'Вход в TaskFlow',
     text: `Для входа в TaskFlow перейдите по ссылке:\n${url}\n\nЕсли вы не запрашивали вход — проигнорируйте это сообщение.`,
@@ -42,24 +58,31 @@ export const auth = betterAuth({
         await sendMagicLink(email, url);
       },
     }),
-    genericOAuth({
-      config: [
-        {
-          providerId: 'yandex',
-          clientId: process.env.YANDEX_CLIENT_ID ?? '',
-          clientSecret: process.env.YANDEX_CLIENT_SECRET ?? '',
-          authorizationUrl: 'https://oauth.yandex.ru/authorize',
-          tokenUrl: 'https://oauth.yandex.ru/token',
-          userInfoUrl: 'https://login.yandex.ru/info',
-          scopes: ['login:email', 'login:info'],
-          mapProfileToUser: (profile) => ({
-            name: (profile.real_name as string) ?? (profile.display_name as string) ?? 'Пользователь',
-            email: (profile.default_email as string) ?? `${profile.id}@yandex.ru`,
-            emailVerified: true,
+    // Яндекс OAuth подключаем только если ключи заданы — иначе попытка
+    // авторизации без них приводит к невнятной ошибке от провайдера.
+    ...(process.env.YANDEX_CLIENT_ID && process.env.YANDEX_CLIENT_SECRET
+      ? [
+          genericOAuth({
+            config: [
+              {
+                providerId: 'yandex',
+                clientId: process.env.YANDEX_CLIENT_ID,
+                clientSecret: process.env.YANDEX_CLIENT_SECRET,
+                authorizationUrl: 'https://oauth.yandex.ru/authorize',
+                tokenUrl: 'https://oauth.yandex.ru/token',
+                userInfoUrl: 'https://login.yandex.ru/info',
+                scopes: ['login:email', 'login:info'],
+                mapProfileToUser: (profile) => ({
+                  name:
+                    (profile.real_name as string) ?? (profile.display_name as string) ?? 'Пользователь',
+                  email: (profile.default_email as string) ?? `${profile.id}@yandex.ru`,
+                  emailVerified: true,
+                }),
+              },
+            ],
           }),
-        },
-      ],
-    }),
+        ]
+      : []),
   ],
   session: {
     expiresIn: 60 * 60 * 24 * 30,
