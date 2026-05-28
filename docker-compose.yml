@@ -73,3 +73,17 @@ volumes:
   pg-data:
   caddy-data:
   caddy-config:
+
+# Сеть compose по умолчанию создаётся с MTU 1500 — даже когда в
+# /etc/docker/daemon.json указан MTU 1280 (он применяется только к
+# докеровскому docker0, не к compose-сетям). На канале с MTU 1280
+# и заблокированным ICMP это рубит TLS-handshake: ServerHello +
+# Certificate (~3 КБ) уходит фрагментами по 1500 байт, которые не
+# проходят, а PMTU discovery не срабатывает. Явно задаём MTU 1280
+# на compose-сеть, чтобы и bridge, и veth, и eth0 в контейнерах
+# использовали правильный размер сегмента.
+networks:
+  default:
+    driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: "1280"
