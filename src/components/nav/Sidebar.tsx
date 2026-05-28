@@ -2,9 +2,10 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { I } from '@/components/icons/Icons';
 import { Logo } from '@/components/ui/Logo';
-import { ProjectIcon } from '@/components/ui/ProjectIcon';
+import { Dropdown } from '@/components/ui/Dropdown';
 import { logoutDemo } from '@/server/actions/demo';
 import styles from './Sidebar.module.css';
 
@@ -39,6 +40,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   orgName = 'Команда TaskFlow',
   isAuthed = true,
 }) => {
+  const router = useRouter();
   const displayOrg = org ?? orgName;
   return (
   <aside className={styles.sidebar}>
@@ -46,41 +48,34 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <Logo size={18} />
     </div>
 
-    <div className={styles.org}>
-      <div className={styles.orgIcon}>{displayOrg.split(' ').map((s) => s[0]).slice(0, 2).join('').toUpperCase()}</div>
-      <div className={styles.orgText}>
-        <div className={styles.orgName}>{displayOrg}</div>
-        <div className={styles.orgRole}>Организация · Бизнес</div>
-      </div>
-      <I.ChevronDown size={14} stroke="#8B939C" />
-    </div>
+    <Dropdown
+      align="left"
+      trigger={
+        <div className={styles.org} style={{ cursor: 'pointer' }}>
+          <div className={styles.orgIcon}>{displayOrg.split(' ').map((s) => s[0]).slice(0, 2).join('').toUpperCase()}</div>
+          <div className={styles.orgText}>
+            <div className={styles.orgName}>{displayOrg}</div>
+            <div className={styles.orgRole}>Организация</div>
+          </div>
+          <I.ChevronDown size={14} stroke="#8B939C" />
+        </div>
+      }
+      items={[
+        { label: 'Участники и роли', icon: <I.Users size={14} />, onClick: () => router.push('/admin/members') },
+        { label: 'Тарифы и оплата', icon: <I.CreditCard size={14} />, onClick: () => router.push('/admin/billing') },
+        { label: 'Журнал действий', icon: <I.Shield size={14} />, onClick: () => router.push('/admin/journal') },
+      ]}
+    />
 
     <nav className={styles.nav}>
       <NavItem href="/projects" icon={<I.Folder size={16} />} label="Проекты" active={active === 'projects'} />
-      <NavItem href="/my-tasks" icon={<I.CheckCircle size={16} />} label="Мои задачи" active={active === 'mytasks'} badge={12} />
-      <NavItem href="/notifications" icon={<I.Bell size={16} />} label="Уведомления" active={active === 'notifications'} badge={4} />
-      <NavItem href="/chat" icon={<I.Message size={16} />} label="Чат" active={active === 'chat'} badge={2} />
+      <NavItem href="/my-tasks" icon={<I.CheckCircle size={16} />} label="Мои задачи" active={active === 'mytasks'} />
+      <NavItem href="/notifications" icon={<I.Bell size={16} />} label="Уведомления" active={active === 'notifications'} />
+      <NavItem href="/chat" icon={<I.Message size={16} />} label="Чат" active={active === 'chat'} />
       <NavItem href="/settings" icon={<I.Settings size={16} />} label="Настройки" active={active === 'settings'} />
     </nav>
 
-    <div className={styles.sectionTitle}>Избранные проекты</div>
-    <div className={styles.favs}>
-      {['Редизайн сайта', 'Запуск мобильного приложения', 'Маркетинговая кампания Q2 2026'].map((p) => (
-        <Link key={p} href={`/projects`} className={styles.fav}>
-          <ProjectIcon name={p} size={20} />
-          <span className={styles.favName}>{p}</span>
-        </Link>
-      ))}
-    </div>
-
     <div className={styles.flex} />
-
-    <div className={styles.storage}>
-      <div className={styles.storageTitle}>Занято 3,2 ГБ из 20 ГБ</div>
-      <div className={styles.storageBar}>
-        <div className={styles.storageFill} style={{ width: '16%' }} />
-      </div>
-    </div>
 
     {isAuthed && (
       <form action={logoutDemo} className={styles.logoutForm}>

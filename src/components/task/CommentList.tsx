@@ -65,12 +65,6 @@ export const CommentList: React.FC<CommentListProps> = ({ taskId, currentUser, i
                 <span className={styles.time}>{c.timeLabel}</span>
               </div>
               <div className={styles.text}>{renderMentions(c.text)}</div>
-              <div className={styles.actions}>
-                <span className={styles.action}>
-                  <I.Reply size={12} stroke="#8B939C" />
-                  Ответить
-                </span>
-              </div>
             </div>
           </div>
         ))}
@@ -88,12 +82,7 @@ export const CommentList: React.FC<CommentListProps> = ({ taskId, currentUser, i
           />
         </div>
         <div className={styles.composerToolbar}>
-          <I.Bold size={14} stroke="#5B6670" />
-          <I.Italic size={14} stroke="#5B6670" />
-          <I.ListOl size={14} stroke="#5B6670" />
-          <span className={styles.vsep} />
-          <I.Paperclip size={14} stroke="#5B6670" />
-          <I.Smile size={14} stroke="#5B6670" />
+          <span style={{ fontSize: 12, color: '#8B939C' }}>Поддерживается @упоминание участников</span>
           <div style={{ flex: 1 }} />
           <Button
             variant="primary"

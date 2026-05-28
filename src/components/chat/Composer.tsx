@@ -61,9 +61,7 @@ export function Composer({ projectId }: { projectId: string }) {
         }}
       />
       <div className={styles.composerToolbar}>
-        <I.Paperclip size={15} stroke="#5B6670" />
-        <I.Smile size={15} stroke="#5B6670" />
-        <I.Bold size={15} stroke="#5B6670" />
+        <span style={{ fontSize: 12, color: '#8B939C' }}>Enter — отправить, Shift+Enter — новая строка</span>
         <div style={{ flex: 1 }} />
         <SubmitButton />
       </div>

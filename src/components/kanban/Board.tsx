@@ -18,7 +18,7 @@ import { I } from '@/components/icons/Icons';
 import { Button } from '@/components/ui/Button';
 import { ProjectIcon } from '@/components/ui/ProjectIcon';
 import { AvatarStack } from '@/components/ui/AvatarStack';
-import { Chip, PRIO_MAP } from '@/components/ui/Badge';
+import { PRIO_MAP } from '@/components/ui/Badge';
 import { Tabs } from '@/components/ui/Tabs';
 import { Column, type ColumnData } from './Column';
 import { TaskCard, type TaskCardData } from './TaskCard';
@@ -57,6 +57,17 @@ export const Board: React.FC<BoardProps> = ({
     const d = new Date();
     return new Date(d.getFullYear(), d.getMonth(), 1);
   });
+  const [assignee, setAssignee] = React.useState<string>('all');
+
+  // Фильтр по исполнителю применяется ко всем трём представлениям. При значении
+  // «все» возвращаем исходные колонки (поведение без фильтра не меняется).
+  const visibleColumns = React.useMemo(
+    () =>
+      assignee === 'all'
+        ? columns
+        : columns.map((c) => ({ ...c, tasks: c.tasks.filter((t) => t.assignees.includes(assignee)) })),
+    [columns, assignee],
+  );
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
@@ -122,7 +133,7 @@ export const Board: React.FC<BoardProps> = ({
     const pad = (n: number) => String(n).padStart(2, '0');
     const ymd = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
     const byDay = new Map<string, TaskCardData[]>();
-    for (const c of columns) {
+    for (const c of visibleColumns) {
       for (const t of c.tasks) {
         if (!t.dueDate) continue;
         const key = ymd(new Date(t.dueDate));
@@ -233,9 +244,19 @@ export const Board: React.FC<BoardProps> = ({
             ]}
           />
           <div className={styles.vsep} />
-          <Chip count={2}>Фильтры</Chip>
-          <Chip>Исполнитель: все</Chip>
-          <Chip active>Тег: дизайн</Chip>
+          <select
+            value={assignee}
+            onChange={(e) => setAssignee(e.target.value)}
+            aria-label="Фильтр по исполнителю"
+            style={{ padding: '6px 10px', fontSize: 13, border: '1px solid #D8DCE0', borderRadius: 8, background: '#fff', cursor: 'pointer' }}
+          >
+            <option value="all">Исполнитель: все</option>
+            {members.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </select>
           <div style={{ flex: 1 }} />
           <Link href={`/projects/${projectId}/settings`} className={styles.settingsLink}>
             <I.Settings size={14} stroke="#5B6670" />
@@ -253,7 +274,7 @@ export const Board: React.FC<BoardProps> = ({
             onDragEnd={onDragEnd}
           >
             <div className={styles.grid}>
-              {columns.map((col) => (
+              {visibleColumns.map((col) => (
                 <Column
                   key={col.id}
                   column={col}
@@ -280,7 +301,7 @@ export const Board: React.FC<BoardProps> = ({
         </div>
       ) : view === 'list' ? (
         <div className={styles.board} style={{ padding: 16 }}>
-          {columns.map((col) => (
+          {visibleColumns.map((col) => (
             <div key={col.id} style={{ marginBottom: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                 <span

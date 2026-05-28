@@ -7,6 +7,9 @@ import styles from '../auth.module.css';
 export const metadata = { title: 'Вход — TaskFlow' };
 
 const demoEnabled = process.env.DEMO_MODE === 'true';
+// Кнопку «Войти через Яндекс ID» показываем только когда OAuth реально
+// настроен — иначе клик по ней приводит к ошибке (провайдер не зарегистрирован).
+const yandexEnabled = !!(process.env.YANDEX_CLIENT_ID && process.env.YANDEX_CLIENT_SECRET);
 
 export default function LoginPage() {
   return (
@@ -23,7 +26,7 @@ export default function LoginPage() {
             <h1>Вход в TaskFlow</h1>
             <p>Войдите в свою организацию</p>
           </div>
-          <LoginForm demoEnabled={demoEnabled} />
+          <LoginForm demoEnabled={demoEnabled} yandexEnabled={yandexEnabled} />
           <div className={styles.alt}>
             Нет организации?{' '}
             <Link href="/register" className={styles.link}>

@@ -14,9 +14,9 @@ const DEMO_USERS = [
   { email: 'sergey.nikolaev@taskflow.ru', name: 'Сергей Николаев', role: 'Участник' },
 ];
 
-type Props = { demoEnabled: boolean };
+type Props = { demoEnabled: boolean; yandexEnabled: boolean };
 
-export function LoginForm({ demoEnabled }: Props) {
+export function LoginForm({ demoEnabled, yandexEnabled }: Props) {
   const [email, setEmail] = React.useState('');
   const [status, setStatus] = React.useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [error, setError] = React.useState<string | null>(null);
@@ -46,29 +46,33 @@ export function LoginForm({ demoEnabled }: Props) {
 
   return (
     <div className={styles.form}>
-      <Button
-        variant="dark"
-        size="lg"
-        block
-        onClick={onYandex}
-        disabled={status === 'sending'}
-        leading={
-          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-            <rect width="24" height="24" rx="4" fill="#FC3F1D" />
-            <text x="12" y="17" textAnchor="middle" fontFamily="Arial" fontWeight="700" fontSize="14" fill="#fff">
-              Я
-            </text>
-          </svg>
-        }
-      >
-        Войти через Яндекс ID
-      </Button>
+      {yandexEnabled && (
+        <>
+          <Button
+            variant="dark"
+            size="lg"
+            block
+            onClick={onYandex}
+            disabled={status === 'sending'}
+            leading={
+              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                <rect width="24" height="24" rx="4" fill="#FC3F1D" />
+                <text x="12" y="17" textAnchor="middle" fontFamily="Arial" fontWeight="700" fontSize="14" fill="#fff">
+                  Я
+                </text>
+              </svg>
+            }
+          >
+            Войти через Яндекс ID
+          </Button>
 
-      <div className={styles.divider}>
-        <span />
-        или
-        <span />
-      </div>
+          <div className={styles.divider}>
+            <span />
+            или
+            <span />
+          </div>
+        </>
+      )}
 
       <Input
         label="Адрес электронной почты"

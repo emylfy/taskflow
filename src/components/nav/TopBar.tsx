@@ -64,7 +64,9 @@ export const TopBar: React.FC<TopBarProps> = ({
     <Link href="/projects/new" className={styles.iconBtn} aria-label="Создать проект">
       <I.Plus size={16} stroke="#5B6670" />
     </Link>
-    <Avatar name={user} size={32} />
+    <Link href="/settings" aria-label="Профиль и настройки" style={{ display: 'inline-flex', borderRadius: '50%' }}>
+      <Avatar name={user} size={32} />
+    </Link>
   </header>
 );
 
