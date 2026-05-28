@@ -1,6 +1,17 @@
 services:
   app:
-    build: .
+    build:
+      context: .
+      # Сборка идёт через сеть хоста (MTU 1280), а не через сеть buildkit (1500).
+      # На канале провайдера в РФ путь режет 1500-пакеты при заблокированном
+      # ICMP — иначе apk/npm/prisma в RUN-шагах зависают на середине загрузки.
+      network: host
+      args:
+        # npm-зеркало: registry.npmjs.org из РФ нестабилен. npmmirror —
+        # полное зеркало (включая tarball'ы), официальный реестр доступен через
+        # NPM_REGISTRY=https://registry.npmjs.org в .env, если зеркало упадёт.
+        NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmmirror.com}
+        PRISMA_ENGINES_MIRROR: ${PRISMA_ENGINES_MIRROR:-https://registry.npmmirror.com/-/binary/prisma}
     env_file: .env
     depends_on:
       db:
