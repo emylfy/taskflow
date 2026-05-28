@@ -53,6 +53,20 @@ ip link set "$IFACE" mtu 1280 || true
 add_cron 'taskflow-mtu' "@reboot /sbin/ip link set $IFACE mtu 1280  # taskflow-mtu"
 echo "[rf-setup] MTU 1280 на $IFACE (закреплено)"
 
+# --- 3b. sysctl: BBR + MTU probing ---
+# На канале с MTU 1280 и нестабильным RU peering обычный cubic быстро
+# сваливает соединение при потерях. BBR держится дольше. tcp_mtu_probing=1
+# включает blackhole-MTU detection — на случай если path MTU < 1280.
+cat > /etc/sysctl.d/99-taskflow-net.conf <<'EOF'
+net.core.default_qdisc=fq
+net.ipv4.tcp_congestion_control=bbr
+net.ipv4.tcp_mtu_probing=1
+net.ipv4.tcp_base_mss=1024
+EOF
+modprobe tcp_bbr 2>/dev/null || true
+sysctl --system >/dev/null 2>&1 || true
+echo "[rf-setup] BBR + MTU probing включены"
+
 # --- 4. swap, если RAM < 4 ГБ ---
 mem_mb=$(free -m | awk '/^Mem:/{print $2}')
 if [ "$mem_mb" -lt 4000 ] && [ ! -f /swapfile ]; then
