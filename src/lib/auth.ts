@@ -8,7 +8,10 @@ import { prisma } from './prisma';
 let smtpTransporter: Transporter | null | undefined;
 function getSmtp(): Transporter | null {
   if (smtpTransporter !== undefined) return smtpTransporter;
-  if (!process.env.SMTP_HOST) {
+  // SMTP считаем настроенным только при заданных хосте И пароле. Иначе (например,
+  // в .env стоит хост-плейсхолдер с пустым паролем) nodemailer пытается
+  // авторизоваться и падает с «Missing credentials» — фолбэчим в консоль.
+  if (!process.env.SMTP_HOST || !process.env.SMTP_PASSWORD) {
     smtpTransporter = null;
     return null;
   }
@@ -29,18 +32,25 @@ async function sendMagicLink(email: string, url: string) {
     // SMTP не настроен: не падаем, чтобы локальная разработка и DEMO_MODE
     // оставались работоспособными. Печатаем magic-link в консоль —
     // удобно для теста потока без поднятого почтового сервера.
-    console.log(`[magic-link] ${email}\n  -> ${url}\n  (SMTP_HOST не задан, письмо не отправлено)`);
+    console.log(`[magic-link] ${email}\n  -> ${url}\n  (SMTP не настроен, письмо не отправлено)`);
     return;
   }
-  await smtp.sendMail({
-    from: `"TaskFlow" <${process.env.SMTP_USER ?? 'noreply@taskflow.ru'}>`,
-    to: email,
-    subject: 'Вход в TaskFlow',
-    text: `Для входа в TaskFlow перейдите по ссылке:\n${url}\n\nЕсли вы не запрашивали вход — проигнорируйте это сообщение.`,
-    html: `<p>Для входа в TaskFlow перейдите по ссылке:</p>
-           <p><a href="${url}">${url}</a></p>
-           <p style="color:#5B6670;font-size:12px">Если вы не запрашивали вход — проигнорируйте это сообщение.</p>`,
-  });
+  try {
+    await smtp.sendMail({
+      from: `"TaskFlow" <${process.env.SMTP_USER ?? 'noreply@taskflow.ru'}>`,
+      to: email,
+      subject: 'Вход в TaskFlow',
+      text: `Для входа в TaskFlow перейдите по ссылке:\n${url}\n\nЕсли вы не запрашивали вход — проигнорируйте это сообщение.`,
+      html: `<p>Для входа в TaskFlow перейдите по ссылке:</p>
+             <p><a href="${url}">${url}</a></p>
+             <p style="color:#5B6670;font-size:12px">Если вы не запрашивали вход — проигнорируйте это сообщение.</p>`,
+    });
+  } catch (err) {
+    // Проблема с SMTP не должна валить вход (better-auth иначе вернёт 500).
+    // Логируем и оставляем ссылку в консоли — ею можно воспользоваться.
+    console.error('[magic-link:error]', err);
+    console.log(`[magic-link] ${email}\n  -> ${url}`);
+  }
 }
 
 export const auth = betterAuth({

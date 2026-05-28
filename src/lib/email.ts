@@ -6,7 +6,9 @@ import nodemailer from 'nodemailer';
 let transporterPromise: Promise<nodemailer.Transporter> | null = null;
 
 function getTransporter(): Promise<nodemailer.Transporter> | null {
-  if (!process.env.SMTP_HOST) return null;
+  // Нужны и хост, и пароль — иначе (хост-плейсхолдер с пустым паролем) nodemailer
+  // упадёт на авторизации. В этом случае молча фолбэчим в console.log.
+  if (!process.env.SMTP_HOST || !process.env.SMTP_PASSWORD) return null;
   if (!transporterPromise) {
     transporterPromise = Promise.resolve(
       nodemailer.createTransport({
