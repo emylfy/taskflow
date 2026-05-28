@@ -5,19 +5,14 @@ import { prisma } from '@/lib/prisma';
 import { requireUser } from '@/lib/session';
 import { parseFeatures, FREE_FEATURES } from '@/lib/plan-limits';
 import { startCheckoutForm } from '@/server/actions/billing';
+import { confirmPendingPaymentForOrg, type ConfirmResult } from '@/server/payments';
+import { PaymentMethods } from './PaymentMethods';
 import styles from './billing.module.css';
 
 export const metadata = { title: 'Тарифы и оплата — TaskFlow' };
 export const dynamic = 'force-dynamic';
 
 const PRICE_FORMATTER = new Intl.NumberFormat('ru-RU');
-
-const METHODS = [
-  { t: 'МИР', sub: 'Карта российского банка', glyph: 'МИР', color: '#1A1D23' },
-  { t: 'СБП', sub: 'Система быстрых платежей', glyph: 'СБП', color: '#B23A3A' },
-  { t: 'ЮMoney', sub: 'Кошелёк ЮMoney', glyph: 'Ю', color: '#8A43B8' },
-  { t: 'СберPay', sub: 'Оплата по QR-коду', glyph: 'S', color: '#2E7D3E' },
-];
 
 export default async function BillingPage({
   searchParams,
@@ -35,6 +30,19 @@ export default async function BillingPage({
     include: { organization: true },
   });
   if (!member) throw new Error('Вы не состоите ни в одной организации');
+
+  // Возврат с ЮKassa: локально вебхук не может достучаться до localhost, поэтому
+  // подтверждаем оплату здесь — перезапрашиваем статус последнего ожидающего
+  // платежа из API ЮKassa и активируем подписку. Идемпотентно; сетевые ошибки
+  // не должны ронять страницу (в этом случае показываем нейтральное сообщение).
+  let returnResult: ConfirmResult | null = null;
+  if (justReturned && process.env.YOOKASSA_SECRET_KEY) {
+    try {
+      returnResult = await confirmPendingPaymentForOrg(member.organizationId);
+    } catch (e) {
+      console.error('Подтверждение оплаты при возврате не удалось:', e);
+    }
+  }
 
   const [plans, currentSub, usage] = await Promise.all([
     prisma.plan.findMany({ orderBy: { priceRub: 'asc' } }),
@@ -85,7 +93,13 @@ export default async function BillingPage({
         {status === 'free-activated' ? (
           <p style={{ color: '#2E7D3E' }}>Тариф «Бесплатный» активирован.</p>
         ) : null}
-        {justReturned ? (
+        {justReturned && (returnResult?.status === 'activated' || returnResult?.status === 'already-active') ? (
+          <p style={{ color: '#2E7D3E' }}>Оплата подтверждена — тариф активирован.</p>
+        ) : justReturned && returnResult?.status === 'canceled' ? (
+          <p style={{ color: '#B23A3A' }}>Платёж отменён. Подписка не изменена.</p>
+        ) : justReturned && returnResult?.status === 'pending' ? (
+          <p style={{ color: '#5B6670' }}>Платёж ещё обрабатывается — обновите страницу через минуту.</p>
+        ) : justReturned ? (
           <p style={{ color: '#5B6670' }}>
             Вы вернулись со страницы оплаты ЮKassa. Если статус подписки не изменился — подождите минуту:
             подтверждение приходит по вебхуку.
@@ -168,23 +182,7 @@ export default async function BillingPage({
               </div>
             </div>
 
-            <div className={styles.methodTitle}>Способ оплаты</div>
-            <div className={styles.methods}>
-              {METHODS.map((m, i) => (
-                <label key={m.t} className={`${styles.method} ${i === 0 ? styles.methodActive : ''}`}>
-                  <span className={`${styles.radio} ${i === 0 ? styles.radioOn : ''}`}>
-                    {i === 0 && <span className={styles.radioDot} />}
-                  </span>
-                  <span className={styles.methodBadge} style={{ color: m.color }}>
-                    {m.glyph}
-                  </span>
-                  <span className={styles.methodInfo}>
-                    <span className={styles.methodName}>{m.t}</span>
-                    <span className={styles.methodSub}>{m.sub}</span>
-                  </span>
-                </label>
-              ))}
-            </div>
+            <PaymentMethods />
 
             <form action={startCheckoutForm.bind(null, { organizationId: member.organizationId, planId: focused.id })}>
               <Button

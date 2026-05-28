@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getPayment } from '@/lib/yookassa';
+import { confirmPaymentById } from '@/server/payments';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -26,93 +25,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'no payment id' }, { status: 400 });
   }
 
-  // ЮKassa НЕ подписывает уведомления — телу доверять нельзя. Боевая проверка:
-  // перезапрашиваем платёж напрямую из API (запрос авторизован нашим секретным
-  // ключом, подделать ответ невозможно). Дополнительно ограничение по IP
-  // отправителя настраивается на уровне Caddy (адреса ЮKassa публичны).
-  let payment;
+  // ЮKassa НЕ подписывает уведомления — телу доверять нельзя. Боевая проверка
+  // (перезапрос платежа из API) и активация подписки выполняются в общем
+  // хелпере confirmPaymentById — тот же код использует обработчик возврата на
+  // /admin/billing. Ограничение по IP отправителя настраивается на уровне Caddy.
+  let result;
   try {
-    payment = await getPayment(paymentId);
+    result = await confirmPaymentById(paymentId);
   } catch (e) {
     console.error('ЮKassa getPayment не удался:', e);
     return NextResponse.json({ error: 'cannot verify payment' }, { status: 502 });
   }
 
-  const existing = await prisma.payment.findUnique({ where: { providerId: paymentId } });
-  if (!existing) {
+  if (result.status === 'unknown') {
     return NextResponse.json({ error: 'unknown payment' }, { status: 404 });
   }
 
-  // Идемпотентность: повторное уведомление по уже проведённому платежу.
-  if (existing.status === 'SUCCESS') {
-    return NextResponse.json({ ok: true, idempotent: true });
-  }
-
-  if (payment.status === 'succeeded' && payment.paid) {
-    const sub = await prisma.subscription.findUnique({
-      where: { id: existing.subscriptionId },
-      include: { organization: { include: { members: { where: { role: 'OWNER' } } } } },
-    });
-    if (!sub) {
-      return NextResponse.json({ error: 'subscription gone' }, { status: 410 });
-    }
-
-    // Активация подписки + продление expiresAt на 30 дней от max(now, expiresAt).
-    // Прежняя активная подписка организации переводится в EXPIRED.
-    const newExpiresAt = new Date(Math.max(Date.now(), sub.expiresAt.getTime()) + 30 * 24 * 60 * 60 * 1000);
-    const ownerId = sub.organization.members[0]?.userId;
-
-    await prisma.$transaction([
-      prisma.payment.update({
-        where: { providerId: paymentId },
-        data: { status: 'SUCCESS', paidAt: new Date() },
-      }),
-      prisma.subscription.updateMany({
-        where: { organizationId: sub.organizationId, status: 'ACTIVE', NOT: { id: sub.id } },
-        data: { status: 'EXPIRED' },
-      }),
-      prisma.subscription.update({
-        where: { id: sub.id },
-        data: { status: 'ACTIVE', expiresAt: newExpiresAt },
-      }),
-      prisma.activityLog.create({
-        data: {
-          organizationId: sub.organizationId,
-          actorId: ownerId ?? sub.organizationId,
-          action: 'subscription.payment.succeeded',
-          targetType: 'subscription',
-          targetId: sub.id,
-        },
-      }),
-      ...(ownerId
-        ? [
-            prisma.notification.create({
-              data: {
-                userId: ownerId,
-                type: 'subscription.activated',
-                payload: {
-                  subscriptionId: sub.id,
-                  planId: sub.planId,
-                  amountRub: existing.amountRub,
-                  expiresAt: newExpiresAt.toISOString(),
-                },
-              },
-            }),
-          ]
-        : []),
-    ]);
-  } else if (payment.status === 'canceled') {
-    const sub = await prisma.subscription.findUnique({ where: { id: existing.subscriptionId } });
-    await prisma.$transaction([
-      prisma.payment.update({
-        where: { providerId: paymentId },
-        data: { status: 'FAILED' },
-      }),
-      ...(sub && sub.status === 'PENDING'
-        ? [prisma.subscription.update({ where: { id: sub.id }, data: { status: 'CANCELLED' } })]
-        : []),
-    ]);
-  }
-
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, status: result.status });
 }
