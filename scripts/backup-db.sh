@@ -3,7 +3,7 @@
 set -euo pipefail
 
 BACKUP_DIR="${BACKUP_DIR:-/var/backups/taskflow}"
-RETENTION_DAYS="${RETENTION_DAYS:-7}"
+RETENTION_DAYS="${RETENTION_DAYS:-30}"
 TS="$(date +%Y-%m-%d_%H-%M-%S)"
 OUT="${BACKUP_DIR}/taskflow_${TS}.sql.gz"
 
