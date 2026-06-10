@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Sidebar } from '@/components/nav/Sidebar';
 import { TopBar } from '@/components/nav/TopBar';
+import { MobileNavProvider } from '@/components/nav/MobileNavProvider';
 import { getCurrentUser } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { getActivePlan } from '@/lib/plan-limits';
@@ -34,12 +35,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const isAuthed = !!user;
 
   return (
-    <div style={{ display: 'flex', width: '100%', minHeight: '100vh' }}>
-      <Sidebar active="settings" orgName={orgName} isAuthed={isAuthed} />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-        <TopBar user={userName} unreadCount={unreadCount} prioritySupport={prioritySupport} />
-        <main style={{ flex: 1, overflow: 'auto' }}>{children}</main>
+    <MobileNavProvider>
+      <div style={{ display: 'flex', width: '100%', minHeight: '100vh' }}>
+        <Sidebar active="settings" orgName={orgName} isAuthed={isAuthed} />
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          <TopBar user={userName} unreadCount={unreadCount} prioritySupport={prioritySupport} />
+          <main style={{ flex: 1, overflow: 'auto' }}>{children}</main>
+        </div>
       </div>
-    </div>
+    </MobileNavProvider>
   );
 }

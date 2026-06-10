@@ -3,13 +3,6 @@ import { FREE_FEATURES, TEAM_FEATURES, BUSINESS_FEATURES } from '../src/lib/plan
 
 const prisma = new PrismaClient();
 
-const STATUS_ORDER: TaskStatus[] = [
-  TaskStatus.TODO,
-  TaskStatus.IN_PROGRESS,
-  TaskStatus.IN_REVIEW,
-  TaskStatus.DONE,
-];
-
 async function main() {
   console.log('🌱 Подготовка данных для демонстрации TaskFlow');
 
@@ -45,6 +38,7 @@ async function main() {
   ];
 
   const users = [];
+  const memberRecords = [];
   for (const u of usersData) {
     const user = await prisma.user.create({
       data: {
@@ -53,7 +47,7 @@ async function main() {
         emailVerified: true,
       },
     });
-    await prisma.member.create({
+    const member = await prisma.member.create({
       data: {
         userId: user.id,
         organizationId: org.id,
@@ -61,6 +55,7 @@ async function main() {
       },
     });
     users.push(user);
+    memberRecords.push(member);
   }
 
   const projectData = [
@@ -110,33 +105,75 @@ async function main() {
     [TaskStatus.DONE]: 0,
   };
 
+  const createdTasks: Awaited<ReturnType<typeof prisma.task.create>>[] = [];
   for (const t of tasksForRedesign) {
     const ord = orderCounters[t.status]++;
-    await prisma.task.create({
-      data: {
-        title: t.title,
-        status: t.status,
-        priority: t.priority,
-        orderIndex: ord,
-        projectId: projects[0].id,
-        assigneeId: users[t.assignee].id,
-        dueDate: new Date('2026-06-30'),
-      },
-    });
-  }
-
-  for (const [i, p] of projects.slice(1).entries()) {
-    for (let j = 0; j < 3; j++) {
+    createdTasks.push(
       await prisma.task.create({
         data: {
-          title: `Задача ${j + 1} проекта «${p.name}»`,
-          status: STATUS_ORDER[j % STATUS_ORDER.length],
-          priority: Priority.MEDIUM,
-          orderIndex: j,
-          projectId: p.id,
-          assigneeId: users[(i + j) % users.length].id,
+          title: t.title,
+          status: t.status,
+          priority: t.priority,
+          orderIndex: ord,
+          projectId: projects[0].id,
+          assigneeId: users[t.assignee].id,
+          dueDate: new Date('2026-06-30'),
         },
-      });
+      }),
+    );
+  }
+
+  // Сроки задаём относительно момента сидинга, чтобы вкладки «Мои задачи»
+  // (Сегодня/На этой неделе/Просрочены) были наполнены в день съёмки.
+  const DAY = 24 * 60 * 60 * 1000;
+  const now = new Date();
+  const due = (days: number) => new Date(now.getTime() + days * DAY);
+
+  // Проекты «Запуск мобильного приложения» и «Маркетинговая кампания Q2 2026» —
+  // реальные названия задач вместо плейсхолдеров «Задача N». Часть назначена
+  // Ивану (users[0]) с разными сроками для наполнения экрана «Мои задачи».
+  const tasksByProject: {
+    project: (typeof projects)[number];
+    tasks: { title: string; status: TaskStatus; priority: Priority; assignee: number; dueDate: Date }[];
+  }[] = [
+    {
+      project: projects[1],
+      tasks: [
+        { title: 'Собрать релиз-кандидат для RuStore', status: TaskStatus.IN_PROGRESS, priority: Priority.HIGH, assignee: 0, dueDate: due(0) },
+        { title: 'Протестировать push-уведомления на Android', status: TaskStatus.TODO, priority: Priority.MEDIUM, assignee: 0, dueDate: due(2) },
+        { title: 'Подготовить карточку приложения и иконки', status: TaskStatus.IN_REVIEW, priority: Priority.MEDIUM, assignee: 2, dueDate: due(9) },
+      ],
+    },
+    {
+      project: projects[2],
+      tasks: [
+        { title: 'Запустить рекламу в Яндекс Директе', status: TaskStatus.TODO, priority: Priority.HIGH, assignee: 0, dueDate: due(-2) },
+        { title: 'Подготовить серию писем для рассылки', status: TaskStatus.IN_PROGRESS, priority: Priority.MEDIUM, assignee: 1, dueDate: due(8) },
+        { title: 'Согласовать контент-план на июль', status: TaskStatus.IN_REVIEW, priority: Priority.LOW, assignee: 3, dueDate: due(15) },
+      ],
+    },
+  ];
+  for (const { project, tasks } of tasksByProject) {
+    const counters: Record<TaskStatus, number> = {
+      [TaskStatus.TODO]: 0,
+      [TaskStatus.IN_PROGRESS]: 0,
+      [TaskStatus.IN_REVIEW]: 0,
+      [TaskStatus.DONE]: 0,
+    };
+    for (const t of tasks) {
+      createdTasks.push(
+        await prisma.task.create({
+          data: {
+            title: t.title,
+            status: t.status,
+            priority: t.priority,
+            orderIndex: counters[t.status]++,
+            projectId: project.id,
+            assigneeId: users[t.assignee].id,
+            dueDate: t.dueDate,
+          },
+        }),
+      );
     }
   }
 
@@ -173,13 +210,43 @@ async function main() {
     },
   });
 
+  // Уведомления-упоминания. Актор ВСЕГДА отличается от получателя (упомянуть
+  // самого себя нельзя). createdAt сдвигаем в прошлое для естественных меток.
+  const hoursAgo = (h: number) => new Date(now.getTime() - h * 60 * 60 * 1000);
   await prisma.notification.createMany({
-    data: users.slice(0, 3).map((u) => ({
-      userId: u.id,
-      type: 'mention',
-      payload: { projectName: 'Редизайн сайта', actor: 'Иван Соколов' },
-    })),
+    data: [
+      { userId: users[0].id, type: 'mention', payload: { projectName: 'Редизайн сайта', actor: 'Мария Петрова' }, createdAt: hoursAgo(3) },
+      { userId: users[0].id, type: 'mention', payload: { projectName: 'Запуск мобильного приложения', actor: 'Сергей Николаев' }, createdAt: hoursAgo(15) },
+      { userId: users[0].id, type: 'mention', payload: { projectName: 'Маркетинговая кампания Q2 2026', actor: 'Елена Куликова' }, createdAt: hoursAgo(27) },
+      { userId: users[1].id, type: 'mention', payload: { projectName: 'Редизайн сайта', actor: 'Иван Соколов' }, createdAt: hoursAgo(5) },
+      { userId: users[2].id, type: 'mention', payload: { projectName: 'Запуск мобильного приложения', actor: 'Иван Соколов' }, createdAt: hoursAgo(8) },
+    ],
   });
+
+  // Записи журнала действий — чтобы журнал и «Последние действия» были наполнены
+  // и (через резолвер названий) показывали реальные заголовки, а не «task»+cuid.
+  const taskByTitle = (title: string) => createdTasks.find((t) => t.title === title);
+  const logSeed: { actor: number; action: string; targetType: string; targetId?: string; h: number }[] = [
+    { actor: 0, action: 'project.create', targetType: 'project', targetId: projects[0].id, h: 30 },
+    { actor: 0, action: 'member.invite', targetType: 'member', targetId: memberRecords[4].id, h: 26 },
+    { actor: 2, action: 'task.create', targetType: 'task', targetId: taskByTitle('Интеграция с ЮKassa: тестовые оплаты')?.id, h: 20 },
+    { actor: 3, action: 'task.status.in_review', targetType: 'task', targetId: taskByTitle('Вёрстка страницы тарифов')?.id, h: 14 },
+    { actor: 0, action: 'task.assignee.change', targetType: 'task', targetId: taskByTitle('Подготовить макеты главной страницы')?.id, h: 6 },
+    { actor: 1, action: 'task.status.done', targetType: 'task', targetId: taskByTitle('Компонент карточки задачи')?.id, h: 1 },
+  ];
+  for (const e of logSeed) {
+    if (!e.targetId) continue;
+    await prisma.activityLog.create({
+      data: {
+        organizationId: org.id,
+        actorId: users[e.actor].id,
+        action: e.action,
+        targetType: e.targetType,
+        targetId: e.targetId,
+        createdAt: hoursAgo(e.h),
+      },
+    });
+  }
 
   console.log('✅ Данные подготовлены: организация «Команда TaskFlow», 5 пользователей, 3 проекта, 15 задач, 3 тарифа.');
 }

@@ -77,6 +77,10 @@
   position: relative;
 }
 
+.item:last-child {
+  border-bottom: none;
+}
+
 .unread {
   background: #FAFBFD;
 }
@@ -84,7 +88,7 @@
 .unreadDot {
   position: absolute;
   left: 8px;
-  top: 22px;
+  top: 27px;
   width: 6px;
   height: 6px;
   border-radius: 50%;
@@ -130,7 +134,7 @@
   font-size: 13px;
   font-weight: 500;
   color: var(--accent);
-  margin-top: 3px;
+  margin-top: 4px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -147,5 +151,11 @@
 .time {
   font-size: 11px;
   color: var(--text-3);
-  margin-top: 3px;
+  margin-top: 4px;
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 16px;
+  }
 }

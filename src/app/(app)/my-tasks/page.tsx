@@ -165,7 +165,8 @@ export default async function MyTasksPage({
                   type="submit"
                   className={styles.check}
                   aria-label="Отметить выполненной"
-                  style={{ border: 0, background: 'transparent', cursor: 'pointer', padding: 0 }}
+                  title="Отметить выполненной"
+                  style={{ cursor: 'pointer', padding: 0 }}
                 />
               </form>
               <PriorityBar level={PRIO_KEY[t.priority]} thickness={3} />

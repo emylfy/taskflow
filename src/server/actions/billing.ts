@@ -51,6 +51,53 @@ export async function startCheckout(input: { organizationId: string; planId: str
     redirect('/admin/billing?status=free-activated');
   }
 
+  // Демо-режим оплаты. Если боевые ключи ЮKassa не заданы, не обращаемся во
+  // внешний API — сразу активируем подписку, имитируя успешную оплату. Нужно
+  // для прототипа/защиты, где нет договора с ЮKassa. Как только YOOKASSA_SHOP_ID
+  // и YOOKASSA_SECRET_KEY будут заданы — автоматически пойдёт обычный платёжный
+  // путь ниже (через настоящую ЮKassa).
+  const yooConfigured = !!(process.env.YOOKASSA_SHOP_ID && process.env.YOOKASSA_SECRET_KEY);
+  if (!yooConfigured) {
+    await prisma.$transaction(async (tx) => {
+      await tx.subscription.updateMany({
+        where: { organizationId: input.organizationId, status: 'ACTIVE' },
+        data: { status: 'EXPIRED' },
+      });
+      await tx.subscription.updateMany({
+        where: { organizationId: input.organizationId, status: 'PENDING' },
+        data: { status: 'CANCELLED' },
+      });
+      const subscription = await tx.subscription.create({
+        data: {
+          organizationId: input.organizationId,
+          planId: plan.id,
+          status: 'ACTIVE',
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        },
+      });
+      await tx.payment.create({
+        data: {
+          subscriptionId: subscription.id,
+          amountRub: plan.priceRub,
+          providerId: `demo-${subscription.id}`,
+          status: 'SUCCESS',
+          paidAt: new Date(),
+        },
+      });
+      await tx.activityLog.create({
+        data: {
+          organizationId: input.organizationId,
+          actorId: user.id,
+          action: 'subscription.payment.demo',
+          targetType: 'plan',
+          targetId: plan.id,
+        },
+      });
+    });
+    revalidatePath('/admin/billing');
+    redirect('/admin/billing?status=demo-paid');
+  }
+
   const returnUrl = `${process.env.BETTER_AUTH_URL}/admin/billing?return=1`;
   const payment = await createPayment({
     amountRub: plan.priceRub,

@@ -213,3 +213,42 @@
   border-color: var(--danger);
   color: var(--danger);
 }
+
+/* Затемнение под выехавшим меню. На десктопе отсутствует. */
+.overlay {
+  display: none;
+}
+
+/* Мобильная ширина: сайдбар превращается в выезжающий off-canvas drawer. */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100dvh;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    z-index: 50;
+  }
+
+  .sidebar.open {
+    transform: none;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(16, 24, 40, 0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 40;
+  }
+
+  .overlayOpen {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}

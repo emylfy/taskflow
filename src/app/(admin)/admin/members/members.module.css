@@ -131,3 +131,20 @@
   font-size: 13px;
   color: var(--text-2);
 }
+
+/* Мобильная ширина: таблица участников скроллится по горизонтали, сохраняя
+   колонки (грид не ломается). */
+@media (max-width: 768px) {
+  .main {
+    padding: 20px 16px;
+  }
+
+  .table {
+    overflow-x: auto;
+  }
+
+  .tableHead,
+  .row {
+    min-width: 560px;
+  }
+}

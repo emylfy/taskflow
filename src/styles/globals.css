@@ -19,6 +19,20 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Страховка от горизонтальной прокрутки всей страницы на узких экранах.
+   overflow-x: clip (в отличие от hidden) не создаёт scroll-контейнер и не
+   ломает position: sticky. Элементы со своей горизонтальной прокруткой
+   (например канбан) скроллятся внутри собственного контейнера. */
+html {
+  overflow-x: clip;
+}
+
+img,
+video,
+canvas {
+  max-width: 100%;
+}
+
 body {
   min-height: 100vh;
 }

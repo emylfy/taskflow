@@ -172,13 +172,15 @@ export default async function NotificationsPage({
               >
                 <button
                   type="submit"
-                  className={styles.item}
                   style={{
+                    display: 'flex',
+                    gap: 12,
+                    alignItems: 'flex-start',
+                    width: '100%',
+                    padding: '14px 18px',
+                    textAlign: 'left',
                     background: 'transparent',
                     border: 0,
-                    width: '100%',
-                    textAlign: 'left',
-                    padding: 'inherit',
                     cursor: unread ? 'pointer' : 'default',
                   }}
                 >

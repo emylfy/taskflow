@@ -7,6 +7,7 @@ import { prisma } from '@/lib/prisma';
 import { requireUser } from '@/lib/session';
 import { getActivePlan } from '@/lib/plan-limits';
 import { listActivityLogs } from '@/server/actions/audit';
+import { withTargetLabels, TARGET_TYPE_RU } from '@/lib/activity-labels';
 import styles from './journal.module.css';
 
 export const metadata = { title: 'Журнал действий — TaskFlow' };
@@ -45,7 +46,7 @@ export default async function JournalPage({
   if (!member) throw new Error('Нет организации');
   const orgId = member.organizationId;
 
-  const [logs, plan, members] = await Promise.all([
+  const [logsRaw, plan, members] = await Promise.all([
     listActivityLogs(orgId, { action: filterAction, actorId: filterActorId }, 200),
     getActivePlan(orgId),
     prisma.member.findMany({
@@ -53,6 +54,8 @@ export default async function JournalPage({
       include: { user: { select: { id: true, name: true } } },
     }),
   ]);
+  // Подставляем человекочитаемые названия объектов (задача/проект/участник).
+  const logs = await withTargetLabels(logsRaw);
 
   const canExport = !!plan?.features.flags.auditExport;
   const planName = plan?.planName ?? 'Бесплатный';
@@ -148,8 +151,10 @@ export default async function JournalPage({
             </div>
             <div className={styles.cellAction}>{ACTION_LABEL[l.action] ?? l.action}</div>
             <div className={styles.cellTarget}>
-              <span className={styles.targetType}>{l.targetType}</span>
-              <span className={styles.targetId}>{l.targetId.slice(0, 12)}…</span>
+              <span className={styles.targetType}>{TARGET_TYPE_RU[l.targetType] ?? l.targetType}</span>
+              <span className={styles.targetName}>
+                {l.targetLabel ?? `${l.targetId.slice(0, 12)}…`}
+              </span>
             </div>
           </div>
         ))}

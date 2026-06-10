@@ -1,4 +1,5 @@
 import { cookies, headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { auth } from './auth';
 import { prisma } from './prisma';
 
@@ -31,7 +32,10 @@ export async function getCurrentUser() {
 export async function requireUser() {
   const user = await getCurrentUser();
   if (!user) {
-    throw new Error('Требуется авторизация');
+    // Неавторизованного пользователя отправляем на вход, а не роняем страницу
+    // ошибкой. redirect() бросает служебное исключение NEXT_REDIRECT, поэтому
+    // ниже TypeScript считает user уже не null.
+    redirect('/login');
   }
   return user;
 }

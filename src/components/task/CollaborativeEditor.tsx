@@ -76,10 +76,23 @@ export const CollaborativeEditor: React.FC<Props> = ({
     };
   }, [taskId]);
 
+  // React Strict Mode (dev) монтирует эффекты дважды: mount → unmount → mount.
+  // Если уничтожать сессию на первом (ложном) размонтировании, WebSocket-провайдер
+  // рвётся ещё до рукопожатия и больше не пересоздаётся (ref уже занят на этапе
+  // render, который повторно не выполняется) — живой синхронизации не возникает.
+  // Поэтому откладываем реальный destroy на следующий тик и отменяем его, если
+  // эффект тут же смонтировался заново (Strict Mode или быстрый ремоунт).
+  const teardownRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   React.useEffect(() => {
+    if (teardownRef.current) {
+      clearTimeout(teardownRef.current);
+      teardownRef.current = null;
+    }
     return () => {
-      sessionRef.current?.destroy();
-      sessionRef.current = null;
+      teardownRef.current = setTimeout(() => {
+        sessionRef.current?.destroy();
+        sessionRef.current = null;
+      }, 0);
     };
   }, []);
 

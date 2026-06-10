@@ -130,3 +130,20 @@
   font-family: inherit;
   margin-right: 4px;
 }
+
+@media (max-width: 480px) {
+  .page {
+    padding: 16px;
+  }
+
+  .input {
+    padding: 14px 16px;
+  }
+
+  .groupHead,
+  .row,
+  .foot {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}

@@ -144,9 +144,39 @@
   font-size: 12px;
 }
 
+.targetName {
+  color: var(--text, #1A1D23);
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .empty {
   padding: 32px 16px;
   text-align: center;
   color: #5B6670;
   font-size: 14px;
+}
+
+/* Мобильная ширина: журнал скроллится по горизонтали, фильтр-селект на всю
+   ширину. */
+@media (max-width: 768px) {
+  .page {
+    padding: 20px 16px;
+  }
+
+  .select {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .table {
+    overflow-x: auto;
+  }
+
+  .tableHead,
+  .row {
+    min-width: 680px;
+  }
 }

@@ -107,6 +107,12 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.check:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .checkOn {
@@ -154,4 +160,31 @@
 .dueOverdue {
   color: var(--danger);
   font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 20px 16px;
+  }
+
+  .tabs {
+    gap: 16px;
+    overflow-x: auto;
+  }
+
+  .tab {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .row {
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .due {
+    min-width: 0;
+  }
 }

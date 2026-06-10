@@ -297,3 +297,27 @@
 .secure b {
   color: var(--text);
 }
+
+/* Мобильная ширина: тарифы в одну колонку, панель оплаты уходит под них на
+   всю ширину вместо правого сайдбара. */
+@media (max-width: 768px) {
+  .main {
+    flex-direction: column;
+  }
+
+  .plans {
+    padding: 20px 16px;
+    max-width: none;
+  }
+
+  .plansGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .payModal {
+    width: auto;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    box-shadow: none;
+  }
+}

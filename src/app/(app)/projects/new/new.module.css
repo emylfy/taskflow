@@ -54,3 +54,13 @@
   gap: 10px;
   justify-content: flex-end;
 }
+
+@media (max-width: 480px) {
+  .page {
+    padding: 16px;
+  }
+
+  .card {
+    padding: 22px 18px;
+  }
+}

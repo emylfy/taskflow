@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Sidebar } from '@/components/nav/Sidebar';
 import { TopBar } from '@/components/nav/TopBar';
+import { MobileNavProvider } from '@/components/nav/MobileNavProvider';
 import { getCurrentUser } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { getActivePlan } from '@/lib/plan-limits';
@@ -35,12 +36,14 @@ export default async function AppShellLayout({ children }: { children: React.Rea
   const isAuthed = !!user;
 
   return (
-    <div className={styles.shell}>
-      <Sidebar orgName={orgName} isAuthed={isAuthed} />
-      <div className={styles.column}>
-        <TopBar user={userName} unreadCount={unreadCount} prioritySupport={prioritySupport} />
-        <main className={styles.main}>{children}</main>
+    <MobileNavProvider>
+      <div className={styles.shell}>
+        <Sidebar orgName={orgName} isAuthed={isAuthed} />
+        <div className={styles.column}>
+          <TopBar user={userName} unreadCount={unreadCount} prioritySupport={prioritySupport} />
+          <main className={styles.main}>{children}</main>
+        </div>
       </div>
-    </div>
+    </MobileNavProvider>
   );
 }

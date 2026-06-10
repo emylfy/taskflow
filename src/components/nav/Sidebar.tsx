@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { I } from '@/components/icons/Icons';
 import { Logo } from '@/components/ui/Logo';
 import { Dropdown } from '@/components/ui/Dropdown';
+import { useMobileNav } from '@/components/nav/MobileNavProvider';
 import { logoutDemo } from '@/server/actions/demo';
 import styles from './Sidebar.module.css';
 
@@ -41,9 +42,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isAuthed = true,
 }) => {
   const router = useRouter();
+  const { open, closeNav } = useMobileNav();
   const displayOrg = org ?? orgName;
   return (
-  <aside className={styles.sidebar}>
+  <>
+  <div
+    className={`${styles.overlay} ${open ? styles.overlayOpen : ''}`}
+    onClick={closeNav}
+    aria-hidden="true"
+  />
+  <aside className={`${styles.sidebar} ${open ? styles.open : ''}`}>
     <div className={styles.logoBlock}>
       <Logo size={18} />
     </div>
@@ -83,6 +91,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </form>
     )}
   </aside>
+  </>
   );
 };
 

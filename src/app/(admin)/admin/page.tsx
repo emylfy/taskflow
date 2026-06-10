@@ -5,6 +5,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { prisma } from '@/lib/prisma';
 import { requireUser } from '@/lib/session';
 import { getActivePlan } from '@/lib/plan-limits';
+import { withTargetLabels } from '@/lib/activity-labels';
 import styles from './admin.module.css';
 
 export const metadata = { title: 'Администрирование — TaskFlow' };
@@ -56,7 +57,7 @@ export default async function AdminDashboardPage() {
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
 
-  const [members, projects, tasksThisWeek, tasksLastWeek, completedThisWeek, recentLogs] = await Promise.all([
+  const [members, projects, tasksThisWeek, tasksLastWeek, completedThisWeek, recentLogsRaw] = await Promise.all([
     prisma.member.count({ where: { organizationId: orgId } }),
     prisma.project.count({ where: { organizationId: orgId } }),
     prisma.task.count({
@@ -82,6 +83,9 @@ export default async function AdminDashboardPage() {
       take: 10,
     }),
   ]);
+
+  // Подставляем название объекта к записям журнала (вместо литерала «task»).
+  const recentLogs = await withTargetLabels(recentLogsRaw);
 
   const tasksDelta = tasksThisWeek - tasksLastWeek;
   const planName = active?.planName ?? 'Бесплатный';
@@ -203,7 +207,7 @@ export default async function AdminDashboardPage() {
                     <span className={styles.logWho}>{l.actor.name}</span>{' '}
                     <span className={styles.logAction}>{ACTION_LABEL[l.action] ?? l.action}</span>
                   </div>
-                  <div className={styles.logTarget}>{l.targetType}</div>
+                  <div className={styles.logTarget}>{l.targetLabel ?? l.targetType}</div>
                 </div>
                 <div className={styles.logTime}>{formatRelative(l.createdAt)}</div>
               </div>

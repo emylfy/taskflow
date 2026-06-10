@@ -179,3 +179,34 @@
   display: flex;
   gap: 10px;
 }
+
+/* Мобильная ширина: меню настроек проекта — горизонтальная лента вкладок,
+   контент на всю ширину. */
+@media (max-width: 768px) {
+  .crumbs {
+    padding: 16px 16px 12px;
+  }
+
+  .body {
+    flex-direction: column;
+  }
+
+  .menu {
+    width: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 12px;
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+  }
+
+  .item {
+    flex-shrink: 0;
+  }
+
+  .content {
+    padding: 20px 16px;
+    max-width: none;
+  }
+}

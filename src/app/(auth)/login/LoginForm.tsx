@@ -98,12 +98,8 @@ export function LoginForm({ demoEnabled, yandexEnabled }: Props) {
         <>
           <div className={styles.divider}>
             <span />
-            демо-режим
+            Быстрый вход
             <span />
-          </div>
-          <div className={styles.demoHint}>
-            Быстрый вход без почты и OAuth для демонстрации. Доступен, пока в окружении задан{' '}
-            <code>DEMO_MODE=true</code>.
           </div>
           <div className={styles.demoList}>
             {DEMO_USERS.map((u) => (

@@ -174,3 +174,23 @@
   background: var(--border);
   margin: 10px 0;
 }
+
+/* Мобильная ширина: вместо «main + правый сайдбар» — вертикальный стек,
+   боковая панель уходит под основной контент на всю ширину. */
+@media (max-width: 768px) {
+  .layout {
+    flex-direction: column;
+  }
+
+  .main {
+    max-width: none;
+    padding: 20px 16px;
+  }
+
+  .aside {
+    width: auto;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    padding: 20px 16px;
+  }
+}

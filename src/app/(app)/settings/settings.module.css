@@ -147,3 +147,70 @@
   display: flex;
   gap: 10px;
 }
+
+/* Выбор файла аватара: нативный input показывает английское «Choose File /
+   No file chosen» и ломает русскоязычный интерфейс. Прячем его и открываем
+   диалог через стилизованный лейбл-кнопку (нативное поведение label → input). */
+.fileButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid var(--border-strong, #D8DCE0);
+  border-radius: var(--r-btn);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.fileButton:hover {
+  background: var(--panel);
+}
+
+.fileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Мобильная ширина: боковое меню настроек превращается в горизонтальную
+   прокручиваемую ленту вкладок над контентом. */
+@media (max-width: 768px) {
+  .layout {
+    flex-direction: column;
+  }
+
+  .menu {
+    width: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 12px;
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+  }
+
+  .menuTitle {
+    display: none;
+  }
+
+  .item {
+    flex-shrink: 0;
+  }
+
+  .main {
+    padding: 20px 16px;
+  }
+
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+}

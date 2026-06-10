@@ -102,3 +102,45 @@
   border-radius: 999px;
   white-space: nowrap;
 }
+
+/* Кнопка-бургер: на десктопе скрыта, на мобильной ширине открывает drawer. */
+.menuBtn {
+  display: none;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: var(--r-btn);
+  align-items: center;
+  justify-content: center;
+  color: var(--text-2);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.menuBtn:hover {
+  background: var(--panel);
+}
+
+@media (max-width: 768px) {
+  .bar {
+    gap: 10px;
+    padding: 0 14px;
+  }
+
+  .menuBtn {
+    display: inline-flex;
+  }
+
+  /* Поиск схлопывается до иконки-ссылки на /search. */
+  .search {
+    width: auto;
+    padding: 8px;
+  }
+
+  .searchText,
+  .kbd {
+    display: none;
+  }
+}

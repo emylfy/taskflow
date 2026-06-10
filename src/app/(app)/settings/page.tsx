@@ -86,13 +86,17 @@ export default async function SettingsPage() {
                 action={updateAvatar}
                 style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}
               >
-                <input
-                  type="file"
-                  name="avatar"
-                  accept="image/png,image/jpeg,image/webp,image/gif"
-                  required
-                  style={{ fontSize: 13 }}
-                />
+                <label className={styles.fileButton}>
+                  <I.Image size={14} />
+                  Выбрать файл
+                  <input
+                    type="file"
+                    name="avatar"
+                    accept="image/png,image/jpeg,image/webp,image/gif"
+                    required
+                    className={styles.fileInput}
+                  />
+                </label>
                 <Button variant="secondary" type="submit">
                   Загрузить
                 </Button>

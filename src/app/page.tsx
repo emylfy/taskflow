@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Tag } from '@/components/ui/Badge';
 import { AvatarStack } from '@/components/ui/AvatarStack';
 import { PRIO_MAP } from '@/components/ui/Badge';
+import { FREE_FEATURES, TEAM_FEATURES, BUSINESS_FEATURES } from '@/lib/plan-limits';
 import styles from './landing.module.css';
 
 const ADVANTAGES = [
@@ -30,33 +31,37 @@ const KANBAN_PREVIEW = [
   {
     title: 'Сделать',
     color: '#8B939C',
-    count: 4,
     cards: [
-      { t: 'Подготовить макеты главной страницы', tag: 'дизайн', prio: 'high' as const },
-      { t: 'Согласовать техническое задание с заказчиком', tag: 'планирование', prio: 'urgent' as const },
-      { t: 'Обновить схему базы данных', tag: 'архитектура', prio: 'normal' as const },
+      { t: 'Подготовить макеты главной страницы', tag: 'дизайн', prio: 'high' as const, assignees: ['Иван Соколов', 'Мария Петрова'] },
+      { t: 'Согласовать техническое задание с заказчиком', tag: 'планирование', prio: 'urgent' as const, assignees: ['Сергей Николаев'] },
+      { t: 'Обновить схему базы данных', tag: 'архитектура', prio: 'normal' as const, assignees: ['Елена Куликова'] },
     ],
   },
   {
     title: 'В работе',
     color: '#2B5FA4',
-    count: 3,
     cards: [
-      { t: 'Настроить развёртывание через Docker Compose', tag: 'инфраструктура', prio: 'high' as const },
-      { t: 'Провести исследование пользователей', tag: 'продукт', prio: 'normal' as const },
+      { t: 'Настроить развёртывание через Docker Compose', tag: 'инфраструктура', prio: 'high' as const, assignees: ['Сергей Николаев'] },
+      { t: 'Провести исследование пользователей', tag: 'продукт', prio: 'normal' as const, assignees: ['Елена Куликова', 'Тимур Белов'] },
+      { t: 'Реализовать совместное редактирование', tag: 'разработка', prio: 'high' as const, assignees: ['Иван Соколов'] },
     ],
   },
   {
     title: 'На проверке',
     color: '#D4A017',
-    count: 2,
-    cards: [{ t: 'Вёрстка страницы тарифов', tag: 'вёрстка', prio: 'normal' as const }],
+    cards: [
+      { t: 'Вёрстка страницы тарифов', tag: 'вёрстка', prio: 'normal' as const, assignees: ['Мария Петрова'] },
+      { t: 'Настроить уведомления по email', tag: 'бэкенд', prio: 'normal' as const, assignees: ['Тимур Белов'] },
+    ],
   },
   {
     title: 'Готово',
     color: '#2E7D3E',
-    count: 6,
-    cards: [{ t: 'Подключение ЮKassa', tag: 'платежи', prio: 'normal' as const }],
+    cards: [
+      { t: 'Подключение ЮKassa', tag: 'платежи', prio: 'normal' as const, assignees: ['Иван Соколов'] },
+      { t: 'Аутентификация через Яндекс ID', tag: 'авторизация', prio: 'high' as const, assignees: ['Сергей Николаев'] },
+      { t: 'Базовый канбан и задачи', tag: 'разработка', prio: 'normal' as const, assignees: ['Мария Петрова', 'Елена Куликова'] },
+    ],
   },
 ];
 
@@ -65,7 +70,7 @@ const PLANS = [
     name: 'Бесплатный',
     price: '0 ₽',
     suffix: 'навсегда',
-    features: ['До 3 пользователей', 'До 2 проектов', 'История версий 7 дней', 'Канбан и комментарии'],
+    features: FREE_FEATURES.display,
     cta: 'Начать бесплатно',
     variant: 'secondary' as const,
   },
@@ -73,7 +78,7 @@ const PLANS = [
     name: 'Команда',
     price: '790 ₽',
     suffix: 'в месяц',
-    features: ['До 20 пользователей', 'Безлимит проектов', 'История версий 90 дней', 'Журнал действий'],
+    features: TEAM_FEATURES.display,
     cta: 'Выбрать Команду',
     variant: 'primary' as const,
     badge: 'Популярный',
@@ -82,7 +87,7 @@ const PLANS = [
     name: 'Бизнес',
     price: '2 900 ₽',
     suffix: 'в месяц',
-    features: ['Безлимит пользователей и проектов', 'SSO через Яндекс ID', 'Экспорт журнала (152-ФЗ)', 'Приоритетная поддержка'],
+    features: BUSINESS_FEATURES.display,
     cta: 'Перейти на Бизнес',
     variant: 'secondary' as const,
   },
@@ -148,7 +153,7 @@ export default function LandingPage() {
                 <div className={styles.colHead}>
                   <span className={styles.colDot} style={{ background: col.color }} />
                   <span className={styles.colTitle}>{col.title}</span>
-                  <span className={styles.colCount}>{col.count}</span>
+                  <span className={styles.colCount}>{col.cards.length}</span>
                 </div>
                 <div className={styles.cards}>
                   {col.cards.map((c, i) => (
@@ -158,7 +163,7 @@ export default function LandingPage() {
                       <div className={styles.cardRow}>
                         <Tag>{c.tag}</Tag>
                         <div style={{ flex: 1 }} />
-                        <AvatarStack names={['Иван Соколов', 'Мария Петрова']} size={14} max={2} />
+                        <AvatarStack names={c.assignees} size={14} max={2} />
                       </div>
                     </div>
                   ))}
@@ -167,7 +172,6 @@ export default function LandingPage() {
             ))}
           </div>
         </div>
-        <div className={styles.laptopBase} />
       </section>
 
       <section id="features" className={styles.features}>
@@ -205,14 +209,14 @@ export default function LandingPage() {
         <div className={styles.businessCard}>
           <div className={styles.businessInfo}>
             <div className={styles.businessBadge}>Для бизнеса</div>
-            <h2>TaskFlow Enterprise</h2>
+            <h2>TaskFlow Бизнес</h2>
             <p>
-              Единый вход через корпоративный Яндекс ID или SAML, SLA 99,9 %, персональный менеджер и
-              расширенный журнал действий. Поможем перенести существующие проекты из других систем.
+              Корпоративный вход через Яндекс ID, расширенный журнал действий с экспортом и
+              приоритетная поддержка. Поможем перенести существующие проекты из других систем.
             </p>
             <ul className={styles.businessList}>
               <li><I.Check size={16} stroke="#2E7D3E" />Без ограничений по участникам и проектам</li>
-              <li><I.Check size={16} stroke="#2E7D3E" />Единый вход (SSO) через SAML 2.0</li>
+              <li><I.Check size={16} stroke="#2E7D3E" />Единый вход (SSO) через Яндекс ID</li>
               <li><I.Check size={16} stroke="#2E7D3E" />Выделенный канал поддержки</li>
               <li><I.Check size={16} stroke="#2E7D3E" />Закрывающие документы в электронном виде</li>
             </ul>

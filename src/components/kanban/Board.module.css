@@ -78,3 +78,22 @@
   font-size: 14px;
   padding: 40px;
 }
+
+/* Мобильная ширина: колонки канбана становятся горизонтально-прокручиваемыми
+   (свайп между статусами), каждая шириной почти на весь экран. */
+@media (max-width: 768px) {
+  .header {
+    padding: 16px 14px 10px;
+  }
+
+  .board {
+    padding: 14px;
+  }
+
+  .grid {
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    grid-auto-columns: minmax(260px, 82vw);
+    gap: 12px;
+  }
+}

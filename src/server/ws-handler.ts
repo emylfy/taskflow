@@ -80,34 +80,44 @@ async function userCanAccessRoom(userId: string, roomId: string): Promise<boolea
   return false;
 }
 
-export async function handleCollaborationUpgrade(
+export function handleCollaborationUpgrade(
   req: IncomingMessage,
   socket: import('node:net').Socket,
   head: Buffer,
-): Promise<boolean> {
+): boolean {
   const url = req.url ?? '';
   if (!url.startsWith('/api/collaboration')) return false;
 
   const parts = url.split('/').filter(Boolean);
   const roomId = parts[parts.length - 1] || 'default';
 
-  const userId = await resolveUserId(req);
-  if (!userId) {
-    socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
-    socket.destroy();
-    return true;
-  }
-
-  const allowed = await userCanAccessRoom(userId, roomId);
-  if (!allowed) {
-    socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
-    socket.destroy();
-    return true;
-  }
-
+  // Рукопожатие завершаем синхронно и сразу ставим ws.pause(): пока идёт асинхронная
+  // проверка доступа, входящие кадры синхронизации копятся в буфере сокета и не
+  // теряются до того, как setupWSConnection повесит обработчик сообщений.
   const server = getCollaborationWSS();
   server.handleUpgrade(req, socket, head, (ws) => {
-    server.emit('connection', ws, req);
+    ws.pause();
+    void authorizeAndJoin(ws, req, roomId);
   });
   return true;
+}
+
+async function authorizeAndJoin(ws: WebSocket, req: IncomingMessage, roomId: string): Promise<void> {
+  try {
+    const userId = await resolveUserId(req);
+    if (!userId) {
+      ws.close(1008, 'unauthorized');
+      return;
+    }
+    const allowed = await userCanAccessRoom(userId, roomId);
+    if (!allowed) {
+      ws.close(1008, 'forbidden');
+      return;
+    }
+    getCollaborationWSS().emit('connection', ws, req);
+    ws.resume();
+  } catch (e) {
+    console.error('collaboration upgrade error:', e);
+    ws.close(1011, 'internal error');
+  }
 }

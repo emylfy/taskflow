@@ -257,3 +257,39 @@
   border-top: 1px solid var(--border);
   background: var(--panel);
 }
+
+/* Мобильная ширина: список каналов уходит наверх компактной прокручиваемой
+   панелью, сообщения занимают остальную высоту; уже горизонтальные паддинги. */
+@media (max-width: 768px) {
+  .layout {
+    flex-direction: column;
+  }
+
+  .sidePanel {
+    width: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    max-height: 38vh;
+  }
+
+  .channelHead {
+    padding: 12px 14px;
+  }
+
+  .daySep {
+    padding: 10px 14px 12px;
+  }
+
+  .daySep::before {
+    left: 14px;
+    right: 14px;
+  }
+
+  .msg {
+    padding: 6px 14px;
+  }
+
+  .composer {
+    margin: 0 14px 14px;
+  }
+}

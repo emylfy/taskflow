@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { I } from '@/components/icons/Icons';
 import { signIn } from '@/lib/auth-client';
+import { registerDemo } from '@/server/actions/demo';
 import styles from '../auth.module.css';
 
-export function RegisterForm() {
+export function RegisterForm({ demoEnabled = false }: { demoEnabled?: boolean }) {
   const router = useRouter();
   const [orgName, setOrgName] = React.useState('Команда TaskFlow');
   const [email, setEmail] = React.useState('');
@@ -22,6 +23,12 @@ export function RegisterForm() {
     setLoading(true);
     setError(null);
     try {
+      if (demoEnabled) {
+        // Демо-режим: создаём организацию и сразу входим, без письма.
+        // registerDemo внутри делает redirect в приложение.
+        await registerDemo({ orgName, name, email });
+        return;
+      }
       await signIn.magicLink({
         email,
         callbackURL: `/projects?org=${encodeURIComponent(orgName)}&name=${encodeURIComponent(name)}`,
@@ -67,11 +74,15 @@ export function RegisterForm() {
         onChange={(e) => setEmail(e.target.value)}
         required
         leading={<I.Mail size={16} stroke="#8B939C" />}
-        hint="Отправим ссылку для входа без пароля"
+        hint={demoEnabled ? 'В демо письмо не отправляется — вход выполнится сразу' : 'Отправим ссылку для входа без пароля'}
       />
       <div style={{ height: 18 }} />
       <Button variant="primary" size="lg" block type="submit" disabled={loading}>
-        {loading ? 'Отправляем ссылку…' : 'Создать организацию'}
+        {loading
+          ? demoEnabled
+            ? 'Создаём организацию…'
+            : 'Отправляем ссылку…'
+          : 'Создать организацию'}
       </Button>
       {error && <div className={styles.error}>{error}</div>}
       <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 14, lineHeight: 1.5 }}>

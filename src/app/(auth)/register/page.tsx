@@ -22,11 +22,12 @@ export default function RegisterPage() {
           </div>
           {demoEnabled && (
             <div className={styles.demoBanner}>
-              В демо-режиме организация «Команда TaskFlow» уже создана. Чтобы её посмотреть,{' '}
-              <Link href="/login" className={styles.link}>войдите как существующий пользователь</Link>.
+              Демо-режим: форма сразу создаёт организацию и открывает приложение — без письма.
+              Можно также{' '}
+              <Link href="/login" className={styles.link}>войти как существующий пользователь</Link>.
             </div>
           )}
-          <RegisterForm />
+          <RegisterForm demoEnabled={demoEnabled} />
           <div className={styles.alt}>
             Уже есть аккаунт?{' '}
             <Link href="/login" className={styles.link}>

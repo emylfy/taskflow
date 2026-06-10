@@ -4,6 +4,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { I } from '@/components/icons/Icons';
 import { Avatar } from '@/components/ui/Avatar';
+import { useMobileNav } from '@/components/nav/MobileNavProvider';
 import styles from './TopBar.module.css';
 
 type TopBarProps = {
@@ -26,8 +27,13 @@ export const TopBar: React.FC<TopBarProps> = ({
   user = 'Иван Соколов',
   unreadCount = 0,
   prioritySupport = false,
-}) => (
+}) => {
+  const { toggle } = useMobileNav();
+  return (
   <header className={styles.bar}>
+    <button type="button" className={styles.menuBtn} onClick={toggle} aria-label="Открыть меню">
+      <I.Menu size={18} stroke="#5B6670" />
+    </button>
     {title && (
       <div className={styles.title}>
         <div className={styles.titleText}>{title}</div>
@@ -68,6 +74,7 @@ export const TopBar: React.FC<TopBarProps> = ({
       <Avatar name={user} size={32} />
     </Link>
   </header>
-);
+  );
+};
 
 export default TopBar;

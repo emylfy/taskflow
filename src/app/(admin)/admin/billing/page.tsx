@@ -93,6 +93,9 @@ export default async function BillingPage({
         {status === 'free-activated' ? (
           <p style={{ color: '#2E7D3E' }}>Тариф «Бесплатный» активирован.</p>
         ) : null}
+        {status === 'demo-paid' ? (
+          <p style={{ color: '#2E7D3E' }}>Оплата проведена (демо-режим) — тариф активирован.</p>
+        ) : null}
         {justReturned && (returnResult?.status === 'activated' || returnResult?.status === 'already-active') ? (
           <p style={{ color: '#2E7D3E' }}>Оплата подтверждена — тариф активирован.</p>
         ) : justReturned && returnResult?.status === 'canceled' ? (

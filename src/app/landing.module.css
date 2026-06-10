@@ -52,7 +52,7 @@
 }
 
 .heroTitle {
-  font-size: 54px;
+  font-size: clamp(30px, 6vw, 54px);
   line-height: 1.08;
   font-weight: 700;
   letter-spacing: -1.2px;
@@ -91,26 +91,29 @@
 .laptop {
   max-width: 1040px;
   margin: 0 auto;
-  background: var(--text);
-  border-radius: 14px 14px 4px 4px;
-  padding: 10px 10px 0;
-  box-shadow: 0 20px 60px rgba(16, 24, 40, 0.18);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 18px 50px rgba(16, 24, 40, 0.12);
+  overflow: hidden;
 }
 
 .laptopTop {
   display: flex;
+  align-items: center;
   gap: 6px;
-  padding-bottom: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
 }
 
 .laptopTop span {
   width: 10px; height: 10px; border-radius: 50%;
-  background: #3a3e45;
+  background: var(--border-strong);
 }
 
 .board {
   background: var(--panel);
-  border-radius: 4px 4px 0 0;
+  border-radius: 0;
   height: 360px;
   display: flex;
   gap: 10px;
@@ -180,13 +183,6 @@
   padding-left: 4px;
 }
 
-.laptopBase {
-  height: 12px;
-  background: #2a2e36;
-  width: 70%;
-  margin: 0 auto;
-  border-radius: 0 0 10px 10px;
-}
 
 .features {
   padding: 64px 64px;
@@ -539,5 +535,99 @@
   }
   .footerNav {
     justify-content: flex-start;
+  }
+}
+
+/* ===== Адаптив лендинга ===== */
+/* Декоративный мок-канбан в hero: при сужении уменьшаем число видимых колонок
+   (4→3→2→1), чтобы оставшиеся были широкими и карточки не обрезались/не
+   наслаивались. Колонки flex:1 делят ширину поровну, лишние скрываем. */
+@media (max-width: 1024px) {
+  .previewWrap {
+    padding: 0 24px;
+  }
+
+  .board .col:nth-child(4) {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 14px 16px;
+  }
+
+  /* Якорные ссылки прячем, остаются лого и кнопки входа/регистрации. */
+  .nav {
+    display: none;
+  }
+
+  .hero {
+    padding: 40px 20px 0;
+  }
+
+  .heroText {
+    font-size: 15px;
+  }
+
+  .previewWrap {
+    padding: 0 16px;
+    margin-top: 32px;
+  }
+
+  .board {
+    height: 320px;
+    gap: 8px;
+    padding: 12px;
+  }
+
+  /* Две широкие колонки превью. */
+  .board .col:nth-child(n + 3) {
+    display: none;
+  }
+
+  .features {
+    padding: 40px 20px;
+    grid-template-columns: 1fr;
+  }
+
+  .pricing {
+    padding: 48px 20px 32px;
+  }
+
+  .pricingHead h2,
+  .sectionHead h2 {
+    font-size: 26px;
+  }
+
+  .plans {
+    grid-template-columns: 1fr;
+  }
+
+  .security {
+    padding: 48px 20px 32px;
+  }
+
+  .business {
+    padding: 32px 20px 56px;
+  }
+}
+
+@media (max-width: 480px) {
+  .heroCta {
+    flex-direction: column;
+  }
+
+  /* Телефон: одна полноширинная колонка превью — без сжатия и наложений. */
+  .board {
+    height: 280px;
+  }
+
+  .board .col:nth-child(n + 2) {
+    display: none;
+  }
+
+  .securityGrid {
+    grid-template-columns: 1fr;
   }
 }

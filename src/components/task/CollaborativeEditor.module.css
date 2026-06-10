@@ -92,3 +92,19 @@
   opacity: 0.5;
   cursor: default;
 }
+
+/* Флажок с именем соавтора. BlockNote показывает подпись над удалённым курсором
+   лишь мгновение при его движении (атрибут [data-active] снимается по таймауту) —
+   на статичном кадре остаётся только каретка. Делаем подпись постоянно видимой,
+   чтобы кадр совместного редактирования наглядно показывал второго пользователя.
+   Цвет подписи берётся inline из awareness (background-color участника). */
+.editor :global(.bn-collaboration-cursor__base .bn-collaboration-cursor__label) {
+  color: #fff !important;
+  max-height: 1.1rem !important;
+  max-width: 20rem !important;
+  padding: 0.1rem 0.4rem !important;
+  top: -17px !important;
+  left: 0 !important;
+  border-radius: 3px 3px 3px 0 !important;
+  overflow: visible !important;
+}

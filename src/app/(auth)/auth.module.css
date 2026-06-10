@@ -194,3 +194,23 @@
   color: var(--text-2);
   margin-top: 1px;
 }
+
+@media (max-width: 480px) {
+  .header {
+    padding: 18px 20px;
+  }
+
+  .main {
+    padding: 16px;
+  }
+
+  .card {
+    padding: 24px 20px;
+  }
+
+  .footer {
+    padding: 16px 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}

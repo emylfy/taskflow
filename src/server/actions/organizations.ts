@@ -1,6 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { requireUser } from '@/lib/session';
 import { FREE_FEATURES } from '@/lib/plan-limits';
@@ -88,6 +87,8 @@ export async function ensureOwnerOrganization(input: { orgName: string; userName
     );
   }
 
-  revalidatePath('/projects');
+  // Намеренно без revalidatePath: эта функция вызывается во время рендера
+  // /projects (force-dynamic), а revalidatePath во время рендера запрещён.
+  // Страница и так рендерится заново, кеш инвалидировать не нужно.
   return { organizationId: org.id, created: true };
 }

@@ -14,6 +14,15 @@
         reverse_proxy adminer:8080
     }
 
+    # WebSocket совместного редактирования и чата живёт на ОТДЕЛЬНОМ порту
+    # (collab-сервер в server.ts, по умолчанию PORT+1=3001). Префикс пути не
+    # срезаем (collab-сервер проверяет /api/collaboration) — поэтому handle, а не
+    # handle_path. Апгрейд WebSocket Caddy проксирует автоматически. Порт 3001 на
+    # хост не публикуется — ходим к app:3001 внутри docker-сети.
+    handle /api/collaboration/* {
+        reverse_proxy app:3001
+    }
+
     handle {
         reverse_proxy app:3000 {
             header_up Host {host}

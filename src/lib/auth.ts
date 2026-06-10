@@ -82,12 +82,26 @@ export const auth = betterAuth({
                 tokenUrl: 'https://oauth.yandex.ru/token',
                 userInfoUrl: 'https://login.yandex.ru/info',
                 scopes: ['login:email', 'login:info'],
-                mapProfileToUser: (profile) => ({
-                  name:
-                    (profile.real_name as string) ?? (profile.display_name as string) ?? 'Пользователь',
-                  email: (profile.default_email as string) ?? `${profile.id}@yandex.ru`,
-                  emailVerified: true,
-                }),
+                mapProfileToUser: (profile) => {
+                  // Яндекс может вернуть ПУСТОЙ e-mail (пустая строка ''), если у
+                  // аккаунта нет почты или не выдан scope login:email. Оператор '??'
+                  // ловит только null/undefined, поэтому '' проскакивал и вход падал
+                  // с email_is_missing. Используем '||' и синтезируем адрес из
+                  // логина/id, чтобы вход срабатывал всегда.
+                  const emails = profile.emails as string[] | undefined;
+                  const realEmail =
+                    (profile.default_email as string) || (Array.isArray(emails) ? emails[0] : '');
+                  const handle = (profile.login as string) || String(profile.id);
+                  return {
+                    name:
+                      (profile.real_name as string) ||
+                      (profile.display_name as string) ||
+                      (profile.login as string) ||
+                      'Пользователь',
+                    email: realEmail || `${handle}@yandex.ru`,
+                    emailVerified: true,
+                  };
+                },
               },
             ],
           }),
