@@ -1,5 +1,6 @@
 'use server';
 
+import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { requireUser } from '@/lib/session';
 import { FREE_FEATURES } from '@/lib/plan-limits';
@@ -91,4 +92,13 @@ export async function ensureOwnerOrganization(input: { orgName: string; userName
   // /projects (force-dynamic), а revalidatePath во время рендера запрещён.
   // Страница и так рендерится заново, кеш инвалидировать не нужно.
   return { organizationId: org.id, created: true };
+}
+
+// Обёртка-экшен для онбординга: форма «Создать команду» для уже вошедшего
+// пользователя без организации (например, после первого входа через Яндекс).
+// Создаёт организацию через ensureOwnerOrganization и ведёт в приложение.
+export async function createOrganizationFromForm(formData: FormData) {
+  const orgName = String(formData.get('orgName') ?? '').trim();
+  await ensureOwnerOrganization({ orgName });
+  redirect('/projects');
 }

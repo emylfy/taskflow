@@ -47,6 +47,13 @@ export default async function ProjectsPage({
 
   const orgIds = memberships.map((m) => m.organizationId);
 
+  // Авторизован, но ещё нет организации (например, первый вход через Яндекс или
+  // magic-link без параметров регистрации) — ведём на онбординг «Создать
+  // команду», а не показываем пустой экран без доступных действий.
+  if (orgIds.length === 0) {
+    redirect('/onboarding');
+  }
+
   const rows = orgIds.length
     ? await prisma.project.findMany({
         where: { organizationId: { in: orgIds } },
