@@ -132,6 +132,117 @@
   color: var(--text-2);
 }
 
+.subSection {
+  margin-top: 28px;
+}
+
+.subHead {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.subGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.subCard {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  background: var(--bg);
+}
+
+.subLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 8px;
+}
+
+.subValueRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.subPlan {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.subActive {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #E4F2E6;
+  color: #2E7D3E;
+  letter-spacing: 0.3px;
+}
+
+.subPrice {
+  font-size: 13px;
+  color: var(--text-2);
+  margin-top: 6px;
+}
+
+.subBig {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.subMeta {
+  font-size: 12px;
+  color: var(--text-2);
+  margin-top: 4px;
+}
+
+.nextPay {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  background: var(--panel);
+}
+
+.nextPayIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.nextPayTitle {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.nextPayMeta {
+  font-size: 12px;
+  color: var(--text-2);
+  margin-top: 2px;
+}
+
+.nextPayLink {
+  font-size: 13px;
+  color: var(--accent);
+  font-weight: 500;
+  text-decoration: none;
+}
+
 /* Мобильная ширина: таблица участников скроллится по горизонтали, сохраняя
    колонки (грид не ломается). */
 @media (max-width: 768px) {
@@ -146,5 +257,9 @@
   .tableHead,
   .row {
     min-width: 560px;
+  }
+
+  .subGrid {
+    grid-template-columns: 1fr 1fr;
   }
 }

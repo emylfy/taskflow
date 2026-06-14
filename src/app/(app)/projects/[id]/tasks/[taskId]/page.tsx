@@ -36,6 +36,11 @@ export default async function TaskDetailPage({
 
   const members = task.project.organization.members.map((m) => ({ id: m.user.id, name: m.user.name }));
 
+  // Участники задачи: исполнитель + авторы комментариев (без повторов).
+  const participants = Array.from(
+    new Set([task.assignee?.name, ...task.comments.map((c) => c.author.name)].filter(Boolean) as string[]),
+  );
+
   const comments = task.comments.map((c) => ({
     id: c.id,
     author: c.author.name,
@@ -116,6 +121,10 @@ export default async function TaskDetailPage({
           assigneeId={task.assigneeId}
           dueDate={task.dueDate}
           members={members}
+          labels={task.labels}
+          participants={participants}
+          createdAt={task.createdAt}
+          updatedAt={task.updatedAt}
         />
 
         <div className={styles.divider} />

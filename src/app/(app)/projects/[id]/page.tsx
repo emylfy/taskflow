@@ -74,7 +74,7 @@ export default async function ProjectBoardPage({ params }: { params: Promise<{ i
         title: t.title,
         priority: PRIORITY_TO_KEY[t.priority],
         assignees: t.assignee ? [t.assignee.name] : [],
-        tags: [],
+        tags: t.labels,
         dueLabel: formatDue(t.dueDate),
         dueDate: t.dueDate ? t.dueDate.toISOString() : null,
         comments: t._count.comments,

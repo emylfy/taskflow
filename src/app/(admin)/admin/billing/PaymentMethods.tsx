@@ -10,6 +10,7 @@ const METHODS = [
   { t: 'СБП', sub: 'Система быстрых платежей', glyph: 'СБП', color: '#B23A3A' },
   { t: 'ЮMoney', sub: 'Кошелёк ЮMoney', glyph: 'Ю', color: '#8A43B8' },
   { t: 'СберPay', sub: 'Оплата по QR-коду', glyph: 'S', color: '#2E7D3E' },
+  { t: 'Сбербанк Онлайн', sub: 'Оплата через СберБанк Онлайн', glyph: 'С', color: '#2E7D3E' },
 ];
 
 export function PaymentMethods() {

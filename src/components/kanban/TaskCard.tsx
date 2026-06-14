@@ -24,6 +24,43 @@ export type TaskCardData = {
 
 type TaskCardProps = { task: TaskCardData; onOpen?: () => void };
 
+// Внутреннее наполнение карточки — общее для сортируемой карточки и клона в DragOverlay.
+const CardInner: React.FC<{ task: TaskCardData }> = ({ task }) => (
+  <>
+    <div className={styles.priorityBar} style={{ background: PRIO_MAP[task.priority].color }} />
+    <div className={styles.title}>{task.title}</div>
+    {task.tags.length > 0 && (
+      <div className={styles.tags}>
+        {task.tags.map((t) => (
+          <Tag key={t}>{t}</Tag>
+        ))}
+      </div>
+    )}
+    <div className={styles.foot}>
+      {task.dueLabel && (
+        <span className={styles.meta}>
+          <I.Calendar size={12} stroke="#8B939C" />
+          {task.dueLabel}
+        </span>
+      )}
+      {task.comments != null && task.comments > 0 && (
+        <span className={styles.meta}>
+          <I.Message size={12} stroke="#8B939C" />
+          {task.comments}
+        </span>
+      )}
+      {task.attachments != null && task.attachments > 0 && (
+        <span className={styles.meta}>
+          <I.Paperclip size={12} stroke="#8B939C" />
+          {task.attachments}
+        </span>
+      )}
+      <div style={{ flex: 1 }} />
+      <AvatarStack names={task.assignees} size={22} max={3} />
+    </div>
+  </>
+);
+
 export const TaskCard: React.FC<TaskCardProps> = ({ task, onOpen }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
@@ -44,39 +81,17 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onOpen }) => {
       {...listeners}
       onDoubleClick={onOpen}
     >
-      <div className={styles.priorityBar} style={{ background: PRIO_MAP[task.priority].color }} />
-      <div className={styles.title}>{task.title}</div>
-      {task.tags.length > 0 && (
-        <div className={styles.tags}>
-          {task.tags.map((t) => (
-            <Tag key={t}>{t}</Tag>
-          ))}
-        </div>
-      )}
-      <div className={styles.foot}>
-        {task.dueLabel && (
-          <span className={styles.meta}>
-            <I.Calendar size={12} stroke="#8B939C" />
-            {task.dueLabel}
-          </span>
-        )}
-        {task.comments != null && task.comments > 0 && (
-          <span className={styles.meta}>
-            <I.Message size={12} stroke="#8B939C" />
-            {task.comments}
-          </span>
-        )}
-        {task.attachments != null && task.attachments > 0 && (
-          <span className={styles.meta}>
-            <I.Paperclip size={12} stroke="#8B939C" />
-            {task.attachments}
-          </span>
-        )}
-        <div style={{ flex: 1 }} />
-        <AvatarStack names={task.assignees} size={22} max={3} />
-      </div>
+      <CardInner task={task} />
     </div>
   );
 };
+
+// Презентационный клон карточки для DragOverlay: «поднятый» вид с наклоном,
+// без useSortable (чтобы не дублировать регистрацию sortable-узла).
+export const TaskCardOverlay: React.FC<{ task: TaskCardData }> = ({ task }) => (
+  <div className={`${styles.card} ${styles.dragging} ${styles.overlay}`}>
+    <CardInner task={task} />
+  </div>
+);
 
 export default TaskCard;

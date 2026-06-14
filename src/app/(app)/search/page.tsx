@@ -53,6 +53,7 @@ export default async function SearchPage({
   let tasks: Awaited<ReturnType<typeof findTasks>> = [];
   let projects: Awaited<ReturnType<typeof findProjects>> = [];
   let people: Awaited<ReturnType<typeof findPeople>> = [];
+  let comments: Awaited<ReturnType<typeof findComments>> = [];
 
   async function findTasks() {
     if (!q || orgIds.length === 0) return [];
@@ -96,12 +97,33 @@ export default async function SearchPage({
       take: 10,
     });
   }
-
-  if (q) {
-    [tasks, projects, people] = await Promise.all([findTasks(), findProjects(), findPeople()]);
+  async function findComments() {
+    if (!q || orgIds.length === 0) return [];
+    return prisma.comment.findMany({
+      where: {
+        task: { project: { organizationId: { in: orgIds } } },
+        content: { contains: q, mode: 'insensitive' },
+      },
+      include: {
+        author: { select: { name: true } },
+        task: { select: { id: true, title: true, projectId: true } },
+      },
+      take: 10,
+    });
   }
 
-  const totalFound = tasks.length + projects.length + people.length;
+  if (q) {
+    [tasks, projects, people, comments] = await Promise.all([
+      findTasks(),
+      findProjects(),
+      findPeople(),
+      findComments(),
+    ]);
+  }
+
+  const totalFound = tasks.length + projects.length + people.length + comments.length;
+  // Первый результат подсвечиваем как активный (как в command-palette).
+  const firstId = tasks[0]?.id ?? projects[0]?.id ?? people[0]?.id ?? comments[0]?.id ?? null;
 
   return (
     <div className={styles.page}>
@@ -139,7 +161,7 @@ export default async function SearchPage({
                 <Link
                   key={t.id}
                   href={`/projects/${t.projectId}/tasks/${t.id}`}
-                  className={styles.row}
+                  className={`${styles.row} ${t.id === firstId ? styles.rowActive : ''}`}
                   style={{ textDecoration: 'none', color: 'inherit' }}
                 >
                   <I.CheckCircle size={16} stroke="#5B6670" />
@@ -165,7 +187,7 @@ export default async function SearchPage({
                 <Link
                   key={p.id}
                   href={`/projects/${p.id}`}
-                  className={styles.row}
+                  className={`${styles.row} ${p.id === firstId ? styles.rowActive : ''}`}
                   style={{ textDecoration: 'none', color: 'inherit' }}
                 >
                   <ProjectIcon name={p.name} size={22} />
@@ -185,7 +207,7 @@ export default async function SearchPage({
                 <span className={styles.groupCount}>· {people.length}</span>
               </div>
               {people.map((u) => (
-                <div key={u.id} className={styles.row}>
+                <div key={u.id} className={`${styles.row} ${u.id === firstId ? styles.rowActive : ''}`}>
                   <Avatar name={u.name} size={24} />
                   <div className={styles.rowInfo}>
                     <div className={styles.rowTitle}>{highlight(u.name, q)}</div>
@@ -195,8 +217,43 @@ export default async function SearchPage({
               ))}
             </div>
           )}
+
+          {comments.length > 0 && (
+            <div className={styles.group}>
+              <div className={styles.groupHead}>
+                <span>Комментарии</span>
+                <span className={styles.groupCount}>· {comments.length}</span>
+              </div>
+              {comments.map((c) => (
+                <Link
+                  key={c.id}
+                  href={`/projects/${c.task.projectId}/tasks/${c.task.id}`}
+                  className={`${styles.row} ${c.id === firstId ? styles.rowActive : ''}`}
+                  style={{ textDecoration: 'none', color: 'inherit' }}
+                >
+                  <I.Message size={16} stroke="#5B6670" />
+                  <div className={styles.rowInfo}>
+                    <div className={styles.rowTitle}>{highlight(c.content, q)}</div>
+                    <div className={styles.rowSub}>
+                      {c.author.name} · {c.task.title}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
         <div className={styles.foot}>
+          <span>
+            <span className={styles.kbd}>↑↓</span>выбрать
+          </span>
+          <span>
+            <span className={styles.kbd}>⏎</span>открыть
+          </span>
+          <span>
+            <span className={styles.kbd}>Esc</span>закрыть
+          </span>
+          <span style={{ flex: 1 }} />
           <span>Поиск по организации «{orgName}»</span>
         </div>
       </div>

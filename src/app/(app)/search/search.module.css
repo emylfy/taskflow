@@ -1,8 +1,11 @@
 .page {
   min-height: calc(100vh - 60px);
-  background: var(--panel);
-  padding: 40px 24px;
+  background: rgba(26, 29, 35, 0.35);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  padding: 80px 24px 40px;
   display: flex;
+  align-items: flex-start;
   justify-content: center;
 }
 

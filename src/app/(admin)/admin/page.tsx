@@ -94,20 +94,33 @@ export default async function AdminDashboardPage() {
 
   // Простой график: считаем созданные задачи за последние 30 дней.
   const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-  const recentTasks = await prisma.task.findMany({
-    where: { project: { organizationId: orgId }, createdAt: { gte: since } },
-    select: { createdAt: true },
-  });
+  const [recentTasks, recentDone] = await Promise.all([
+    prisma.task.findMany({
+      where: { project: { organizationId: orgId }, createdAt: { gte: since } },
+      select: { createdAt: true },
+    }),
+    prisma.task.findMany({
+      where: { project: { organizationId: orgId }, status: 'DONE', updatedAt: { gte: since } },
+      select: { updatedAt: true },
+    }),
+  ]);
   const dayBuckets = new Array(30).fill(0) as number[];
   for (const t of recentTasks) {
     const dayIdx = Math.floor((t.createdAt.getTime() - since.getTime()) / (24 * 60 * 60 * 1000));
     if (dayIdx >= 0 && dayIdx < 30) dayBuckets[dayIdx]++;
   }
-  const mx = Math.max(1, ...dayBuckets);
-  const mn = 0;
-  const pts = dayBuckets
-    .map((v, i) => `${(i / Math.max(1, dayBuckets.length - 1)) * 100},${100 - ((v - mn) / (mx - mn || 1)) * 90 - 5}`)
-    .join(' ');
+  const doneBuckets = new Array(30).fill(0) as number[];
+  for (const t of recentDone) {
+    const dayIdx = Math.floor((t.updatedAt.getTime() - since.getTime()) / (24 * 60 * 60 * 1000));
+    if (dayIdx >= 0 && dayIdx < 30) doneBuckets[dayIdx]++;
+  }
+  const mx = Math.max(1, ...dayBuckets, ...doneBuckets);
+  const toPoints = (b: number[]) =>
+    b.map((v, i) => `${(i / Math.max(1, b.length - 1)) * 100},${100 - (v / mx) * 90 - 5}`).join(' ');
+  const pts = toPoints(dayBuckets);
+  const ptsDone = toPoints(doneBuckets);
+  const axisFrom = since.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+  const axisTo = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
 
   return (
     <div className={styles.main}>
@@ -161,6 +174,13 @@ export default async function AdminDashboardPage() {
                 <span className={styles.legendLine} style={{ background: '#2B5FA4' }} />
                 Создано
               </span>
+              <span>
+                <span
+                  className={styles.legendLine}
+                  style={{ background: 'repeating-linear-gradient(90deg, #2E7D3E 0 3px, transparent 3px 6px)' }}
+                />
+                Завершено
+              </span>
             </div>
           </div>
           <div className={styles.chart}>
@@ -179,10 +199,18 @@ export default async function AdminDashboardPage() {
                 strokeWidth="0.6"
                 vectorEffect="non-scaling-stroke"
               />
+              <polyline
+                points={ptsDone}
+                fill="none"
+                stroke="#2E7D3E"
+                strokeWidth="0.6"
+                strokeDasharray="2 1.5"
+                vectorEffect="non-scaling-stroke"
+              />
             </svg>
             <div className={styles.chartX}>
-              <span>30 дней назад</span>
-              <span>сегодня</span>
+              <span>{axisFrom}</span>
+              <span>{axisTo}</span>
             </div>
           </div>
         </section>

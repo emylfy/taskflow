@@ -21,7 +21,7 @@ import { AvatarStack } from '@/components/ui/AvatarStack';
 import { PRIO_MAP } from '@/components/ui/Badge';
 import { Tabs } from '@/components/ui/Tabs';
 import { Column, type ColumnData } from './Column';
-import { TaskCard, type TaskCardData } from './TaskCard';
+import { TaskCardOverlay, type TaskCardData } from './TaskCard';
 import { moveTask, createTask } from '@/server/actions/tasks';
 import styles from './Board.module.css';
 
@@ -296,7 +296,7 @@ export const Board: React.FC<BoardProps> = ({
                 />
               ))}
             </div>
-            <DragOverlay>{activeTask ? <TaskCard task={activeTask} /> : null}</DragOverlay>
+            <DragOverlay>{activeTask ? <TaskCardOverlay task={activeTask} /> : null}</DragOverlay>
           </DndContext>
         </div>
       ) : view === 'list' ? (

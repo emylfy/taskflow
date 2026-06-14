@@ -3,8 +3,9 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { Avatar } from '@/components/ui/Avatar';
+import { AvatarStack } from '@/components/ui/AvatarStack';
 import { I } from '@/components/icons/Icons';
-import { StatusPill } from '@/components/ui/Badge';
+import { StatusPill, Tag } from '@/components/ui/Badge';
 import { updateTask, moveTask } from '@/server/actions/tasks';
 import type { TaskStatus, Priority } from '@prisma/client';
 import styles from '../../app/(app)/projects/[id]/tasks/[taskId]/task.module.css';
@@ -32,9 +33,24 @@ type Props = {
   assigneeId: string | null;
   dueDate: Date | null;
   members: Member[];
+  labels?: string[];
+  participants?: string[];
+  createdAt?: Date;
+  updatedAt?: Date;
 };
 
-export function TaskMetaPanel({ taskId, status, priority, assigneeId, dueDate, members }: Props) {
+export function TaskMetaPanel({
+  taskId,
+  status,
+  priority,
+  assigneeId,
+  dueDate,
+  members,
+  labels = [],
+  participants = [],
+  createdAt,
+  updatedAt,
+}: Props) {
   const router = useRouter();
   const [busy, setBusy] = React.useState(false);
 
@@ -191,6 +207,42 @@ export function TaskMetaPanel({ taskId, status, priority, assigneeId, dueDate, m
           </span>
         </div>
       </div>
+
+      {labels.length > 0 && (
+        <div className={styles.metaRow}>
+          <div className={styles.metaLabel}>Теги</div>
+          <div className={styles.metaValue}>
+            <span style={{ display: 'inline-flex', gap: 5, flexWrap: 'wrap' }}>
+              {labels.map((l) => (
+                <Tag key={l}>{l}</Tag>
+              ))}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {participants.length > 0 && (
+        <div className={styles.metaRow}>
+          <div className={styles.metaLabel}>Участники</div>
+          <div className={styles.metaValue}>
+            <AvatarStack names={participants} size={22} max={4} />
+          </div>
+        </div>
+      )}
+
+      {createdAt && (
+        <div className={styles.metaRow}>
+          <div className={styles.metaLabel}>Создана</div>
+          <div className={styles.metaValue} style={{ color: '#5B6670' }}>{fmtDate(createdAt)}</div>
+        </div>
+      )}
+
+      {updatedAt && (
+        <div className={styles.metaRow}>
+          <div className={styles.metaLabel}>Обновлена</div>
+          <div className={styles.metaValue} style={{ color: '#5B6670' }}>{fmtDate(updatedAt)}</div>
+        </div>
+      )}
 
       <input type="hidden" value={fmtDate(dueDate)} readOnly />
     </>

@@ -6,15 +6,20 @@ import { requireUser } from '@/lib/session';
 
 export async function updateProfile(formData: FormData) {
   const user = await requireUser();
-  const name = String(formData.get('name') ?? '').trim();
+  // Имя собираем из «Имя» + «Фамилия»; поле name оставлено для обратной совместимости.
+  const firstName = String(formData.get('firstName') ?? '').trim();
+  const lastName = String(formData.get('lastName') ?? '').trim();
+  const name = ([firstName, lastName].filter(Boolean).join(' ') || String(formData.get('name') ?? '')).trim();
   const timezone = String(formData.get('timezone') ?? '').trim() || 'Europe/Moscow';
+  const position = String(formData.get('position') ?? '').trim() || null;
+  const locale = String(formData.get('locale') ?? '').trim() || 'ru';
 
   if (!name) throw new Error('Имя не может быть пустым');
   if (name.length > 100) throw new Error('Слишком длинное имя');
 
   await prisma.user.update({
     where: { id: user.id },
-    data: { name, timezone },
+    data: { name, timezone, position, locale },
   });
 
   revalidatePath('/settings');

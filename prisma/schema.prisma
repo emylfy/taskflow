@@ -16,6 +16,8 @@ model User {
   emailVerified  Boolean        @default(false)
   image          String?
   timezone       String         @default("Europe/Moscow")
+  position       String?
+  locale         String         @default("ru")
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
@@ -144,6 +146,7 @@ model Task {
   assigneeId  String?
   dueDate     DateTime?
   orderIndex  Int           @default(0)
+  labels      String[]      @default([])
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 

@@ -18,6 +18,12 @@
   box-shadow: 0 12px 28px rgba(43, 95, 164, 0.22), 0 0 0 2px rgba(43, 95, 164, 0.18);
 }
 
+/* Клон карточки в DragOverlay — лёгкий наклон, как в эталонном макете. */
+.overlay {
+  transform: rotate(-1.8deg);
+  cursor: grabbing;
+}
+
 .priorityBar {
   position: absolute;
   left: 0;

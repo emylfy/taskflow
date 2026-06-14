@@ -18,18 +18,20 @@ async function resolveAuthContext() {
       prisma.notification.count({ where: { userId: user.id, readAt: null } }),
     ]);
     let prioritySupport = false;
+    let planName: string | null = null;
     if (member) {
       const plan = await getActivePlan(member.organizationId);
       prioritySupport = !!plan?.features.flags.prioritySupport;
+      planName = plan?.planName ?? null;
     }
-    return { user, org: member?.organization ?? null, unreadCount, prioritySupport };
+    return { user, org: member?.organization ?? null, unreadCount, prioritySupport, planName };
   } catch {
-    return { user: null, org: null, unreadCount: 0, prioritySupport: false };
+    return { user: null, org: null, unreadCount: 0, prioritySupport: false, planName: null };
   }
 }
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { user, org, unreadCount, prioritySupport } = await resolveAuthContext();
+  const { user, org, unreadCount, prioritySupport, planName } = await resolveAuthContext();
   const userName = user?.name ?? 'Гость';
   const orgName = org?.name ?? 'Команда TaskFlow';
   const isAuthed = !!user;
@@ -37,7 +39,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <MobileNavProvider>
       <div style={{ display: 'flex', width: '100%', minHeight: '100vh' }}>
-        <Sidebar active="settings" orgName={orgName} isAuthed={isAuthed} />
+        <Sidebar active="settings" orgName={orgName} planName={planName ?? undefined} isAuthed={isAuthed} />
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           <TopBar user={userName} unreadCount={unreadCount} prioritySupport={prioritySupport} />
           <main style={{ flex: 1, overflow: 'auto' }}>{children}</main>

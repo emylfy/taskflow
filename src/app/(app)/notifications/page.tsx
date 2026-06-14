@@ -129,6 +129,9 @@ export default async function NotificationsPage({
     { key: 'mentions', t: 'Упоминания', n: counts.mentions },
   ];
 
+  // Хэндл получателя для чипа упоминания (упомянули именно его).
+  const meHandle = (user.name?.trim().split(/\s+/)[0] || user.email?.split('@')[0] || 'вы');
+
   return (
     <div className={styles.page}>
       <div className={styles.panel}>
@@ -163,6 +166,7 @@ export default async function NotificationsPage({
             const ic = ICON_MAP[iconFor(n.type)];
             const d = describe(n, projectsById, tasksById);
             const unread = !n.readAt;
+            const isMention = n.type === 'mention' || n.type.includes('mention');
             return (
               <form
                 key={n.id}
@@ -196,7 +200,12 @@ export default async function NotificationsPage({
                       <span className={styles.who}>{d.actor}</span>{' '}
                       <span className={styles.text}>{d.action}</span>
                     </div>
-                    {d.target ? <div className={styles.target}>{d.target}</div> : null}
+                    {d.target ? (
+                      <div className={styles.target}>
+                        {isMention ? <span className={styles.mention}>@{meHandle}</span> : null}
+                        {d.target}
+                      </div>
+                    ) : null}
                     <div className={styles.time}>{formatRelative(n.createdAt)}</div>
                   </div>
                 </button>

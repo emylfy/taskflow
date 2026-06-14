@@ -31,12 +31,26 @@ const TIMEZONES: { value: string; label: string }[] = [
   { value: 'Asia/Kamchatka', label: 'Камчатка (UTC+12)' },
 ];
 
+const LANGUAGES: { value: string; label: string }[] = [
+  { value: 'ru', label: 'Русский' },
+  { value: 'en', label: 'English' },
+];
+
+const selectStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '10px 12px',
+  fontSize: 14,
+  border: '1px solid #D8DCE0',
+  borderRadius: 8,
+  background: '#fff',
+};
+
 export default async function SettingsPage() {
   const user = await requireUser();
 
   const dbUser = await prisma.user.findUnique({
     where: { id: user.id },
-    select: { id: true, name: true, email: true, timezone: true, image: true },
+    select: { id: true, name: true, email: true, timezone: true, image: true, position: true, locale: true },
   });
   const profile = dbUser ?? {
     id: user.id,
@@ -44,7 +58,11 @@ export default async function SettingsPage() {
     email: user.email ?? '',
     timezone: 'Europe/Moscow',
     image: null as string | null,
+    position: null as string | null,
+    locale: 'ru',
   };
+  const [firstName, ...restName] = (profile.name ?? '').trim().split(/\s+/);
+  const lastName = restName.join(' ');
 
   const accounts = await prisma.account.findMany({
     where: { userId: profile.id },
@@ -115,7 +133,10 @@ export default async function SettingsPage() {
           </div>
 
           <form action={updateProfile}>
-            <Input name="name" label="Имя и фамилия" defaultValue={profile.name} required />
+            <div className={styles.grid2}>
+              <Input name="firstName" label="Имя" defaultValue={firstName ?? ''} required />
+              <Input name="lastName" label="Фамилия" defaultValue={lastName} />
+            </div>
             <div style={{ height: 14 }} />
             <Input
               label="Электронная почта"
@@ -124,28 +145,40 @@ export default async function SettingsPage() {
               hint="Изменение email требует подтверждения по новому адресу — функция планируется."
             />
             <div style={{ height: 14 }} />
+            <Input
+              name="position"
+              label="Должность"
+              defaultValue={profile.position ?? ''}
+              placeholder="Например, продуктовый дизайнер"
+            />
+            <div style={{ height: 14 }} />
 
-            <label style={{ display: 'block', fontSize: 13, color: '#5B6670', marginBottom: 6 }}>
-              Часовой пояс
-            </label>
-            <select
-              name="timezone"
-              defaultValue={profile.timezone}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                fontSize: 14,
-                border: '1px solid #D8DCE0',
-                borderRadius: 8,
-                background: '#fff',
-              }}
-            >
-              {TIMEZONES.map((tz) => (
-                <option key={tz.value} value={tz.value}>
-                  {tz.label}
-                </option>
-              ))}
-            </select>
+            <div className={styles.grid2}>
+              <div>
+                <label style={{ display: 'block', fontSize: 13, color: '#5B6670', marginBottom: 6 }}>
+                  Часовой пояс
+                </label>
+                <select name="timezone" defaultValue={profile.timezone} style={selectStyle}>
+                  {TIMEZONES.map((tz) => (
+                    <option key={tz.value} value={tz.value}>
+                      {tz.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 13, color: '#5B6670', marginBottom: 6 }}>
+                  Язык интерфейса
+                </label>
+                <select name="locale" defaultValue={profile.locale ?? 'ru'} style={selectStyle}>
+                  {LANGUAGES.map((l) => (
+                    <option key={l.value} value={l.value}>
+                      {l.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
             <div className={styles.loginCard}>
               <div className={styles.loginTitle}>Способы входа в аккаунт</div>

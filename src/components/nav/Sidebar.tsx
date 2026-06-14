@@ -32,6 +32,7 @@ type SidebarProps = {
   active?: NavKey;
   org?: string;
   orgName?: string;
+  planName?: string;
   isAuthed?: boolean;
 };
 
@@ -39,6 +40,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   active = 'projects',
   org,
   orgName = 'Команда TaskFlow',
+  planName,
   isAuthed = true,
 }) => {
   const router = useRouter();
@@ -63,7 +65,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className={styles.orgIcon}>{displayOrg.split(' ').map((s) => s[0]).slice(0, 2).join('').toUpperCase()}</div>
           <div className={styles.orgText}>
             <div className={styles.orgName}>{displayOrg}</div>
-            <div className={styles.orgRole}>Организация</div>
+            <div className={styles.orgRole}>{planName ? `Организация · ${planName}` : 'Организация'}</div>
           </div>
           <I.ChevronDown size={14} stroke="#8B939C" />
         </div>

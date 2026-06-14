@@ -30,11 +30,11 @@ async function main() {
   });
 
   const usersData = [
-    { name: 'Иван Соколов', email: 'ivan.sokolov@taskflow.ru', role: MemberRole.OWNER },
-    { name: 'Мария Петрова', email: 'maria.petrova@taskflow.ru', role: MemberRole.ADMIN },
-    { name: 'Сергей Николаев', email: 'sergey.nikolaev@taskflow.ru', role: MemberRole.MEMBER },
-    { name: 'Елена Куликова', email: 'elena.kulikova@taskflow.ru', role: MemberRole.MEMBER },
-    { name: 'Тимур Белов', email: 'timur.belov@taskflow.ru', role: MemberRole.MEMBER },
+    { name: 'Иван Соколов', email: 'ivan.sokolov@taskflow.ru', role: MemberRole.OWNER, position: 'Продуктовый дизайнер' },
+    { name: 'Мария Петрова', email: 'maria.petrova@taskflow.ru', role: MemberRole.ADMIN, position: 'Руководитель проекта' },
+    { name: 'Сергей Николаев', email: 'sergey.nikolaev@taskflow.ru', role: MemberRole.MEMBER, position: 'Бэкенд-разработчик' },
+    { name: 'Елена Куликова', email: 'elena.kulikova@taskflow.ru', role: MemberRole.MEMBER, position: 'Продуктовый аналитик' },
+    { name: 'Тимур Белов', email: 'timur.belov@taskflow.ru', role: MemberRole.MEMBER, position: 'Маркетолог' },
   ];
 
   const users = [];
@@ -45,6 +45,7 @@ async function main() {
         name: u.name,
         email: u.email,
         emailVerified: true,
+        position: u.position,
       },
     });
     const member = await prisma.member.create({
@@ -87,15 +88,15 @@ async function main() {
   }
 
   const tasksForRedesign = [
-    { title: 'Подготовить макеты главной страницы', status: TaskStatus.IN_PROGRESS, priority: Priority.HIGH, assignee: 1 },
-    { title: 'Согласовать техническое задание с заказчиком', status: TaskStatus.TODO, priority: Priority.CRITICAL, assignee: 0 },
-    { title: 'Обновить схему базы данных под отчёты', status: TaskStatus.TODO, priority: Priority.MEDIUM, assignee: 2 },
-    { title: 'Провести исследование пользователей', status: TaskStatus.TODO, priority: Priority.MEDIUM, assignee: 3 },
-    { title: 'Настроить развёртывание через Docker Compose', status: TaskStatus.IN_PROGRESS, priority: Priority.HIGH, assignee: 2 },
-    { title: 'Вёрстка страницы тарифов', status: TaskStatus.IN_REVIEW, priority: Priority.MEDIUM, assignee: 3 },
-    { title: 'Интеграция с ЮKassa: тестовые оплаты', status: TaskStatus.IN_REVIEW, priority: Priority.HIGH, assignee: 2 },
-    { title: 'Компонент карточки задачи', status: TaskStatus.DONE, priority: Priority.MEDIUM, assignee: 1 },
-    { title: 'Черновик политики возвратов', status: TaskStatus.DONE, priority: Priority.LOW, assignee: 4 },
+    { title: 'Подготовить макеты главной страницы', status: TaskStatus.IN_PROGRESS, priority: Priority.HIGH, assignee: 1, labels: ['дизайн'] },
+    { title: 'Согласовать техническое задание с заказчиком', status: TaskStatus.TODO, priority: Priority.CRITICAL, assignee: 0, labels: ['планирование'] },
+    { title: 'Обновить схему базы данных под отчёты', status: TaskStatus.TODO, priority: Priority.MEDIUM, assignee: 2, labels: ['архитектура'] },
+    { title: 'Провести исследование пользователей', status: TaskStatus.TODO, priority: Priority.MEDIUM, assignee: 3, labels: ['продукт'] },
+    { title: 'Настроить развёртывание через Docker Compose', status: TaskStatus.IN_PROGRESS, priority: Priority.HIGH, assignee: 2, labels: ['инфраструктура'] },
+    { title: 'Вёрстка страницы тарифов', status: TaskStatus.IN_REVIEW, priority: Priority.MEDIUM, assignee: 3, labels: ['вёрстка'] },
+    { title: 'Интеграция с ЮKassa: тестовые оплаты', status: TaskStatus.IN_REVIEW, priority: Priority.HIGH, assignee: 2, labels: ['платежи', 'бэкенд'] },
+    { title: 'Компонент карточки задачи', status: TaskStatus.DONE, priority: Priority.MEDIUM, assignee: 1, labels: ['разработка'] },
+    { title: 'Черновик политики возвратов', status: TaskStatus.DONE, priority: Priority.LOW, assignee: 4, labels: ['документы'] },
   ];
 
   const orderCounters: Record<TaskStatus, number> = {
@@ -115,6 +116,7 @@ async function main() {
           status: t.status,
           priority: t.priority,
           orderIndex: ord,
+          labels: t.labels,
           projectId: projects[0].id,
           assigneeId: users[t.assignee].id,
           dueDate: new Date('2026-06-30'),
@@ -134,22 +136,22 @@ async function main() {
   // Ивану (users[0]) с разными сроками для наполнения экрана «Мои задачи».
   const tasksByProject: {
     project: (typeof projects)[number];
-    tasks: { title: string; status: TaskStatus; priority: Priority; assignee: number; dueDate: Date }[];
+    tasks: { title: string; status: TaskStatus; priority: Priority; assignee: number; dueDate: Date; labels: string[] }[];
   }[] = [
     {
       project: projects[1],
       tasks: [
-        { title: 'Собрать релиз-кандидат для RuStore', status: TaskStatus.IN_PROGRESS, priority: Priority.HIGH, assignee: 0, dueDate: due(0) },
-        { title: 'Протестировать push-уведомления на Android', status: TaskStatus.TODO, priority: Priority.MEDIUM, assignee: 0, dueDate: due(2) },
-        { title: 'Подготовить карточку приложения и иконки', status: TaskStatus.IN_REVIEW, priority: Priority.MEDIUM, assignee: 2, dueDate: due(9) },
+        { title: 'Собрать релиз-кандидат для RuStore', status: TaskStatus.IN_PROGRESS, priority: Priority.HIGH, assignee: 0, dueDate: due(0), labels: ['релиз'] },
+        { title: 'Протестировать push-уведомления на Android', status: TaskStatus.TODO, priority: Priority.MEDIUM, assignee: 0, dueDate: due(2), labels: ['тестирование'] },
+        { title: 'Подготовить карточку приложения и иконки', status: TaskStatus.IN_REVIEW, priority: Priority.MEDIUM, assignee: 2, dueDate: due(9), labels: ['дизайн'] },
       ],
     },
     {
       project: projects[2],
       tasks: [
-        { title: 'Запустить рекламу в Яндекс Директе', status: TaskStatus.TODO, priority: Priority.HIGH, assignee: 0, dueDate: due(-2) },
-        { title: 'Подготовить серию писем для рассылки', status: TaskStatus.IN_PROGRESS, priority: Priority.MEDIUM, assignee: 1, dueDate: due(8) },
-        { title: 'Согласовать контент-план на июль', status: TaskStatus.IN_REVIEW, priority: Priority.LOW, assignee: 3, dueDate: due(15) },
+        { title: 'Запустить рекламу в Яндекс Директе', status: TaskStatus.TODO, priority: Priority.HIGH, assignee: 0, dueDate: due(-2), labels: ['реклама'] },
+        { title: 'Подготовить серию писем для рассылки', status: TaskStatus.IN_PROGRESS, priority: Priority.MEDIUM, assignee: 1, dueDate: due(8), labels: ['контент'] },
+        { title: 'Согласовать контент-план на июль', status: TaskStatus.IN_REVIEW, priority: Priority.LOW, assignee: 3, dueDate: due(15), labels: ['планирование'] },
       ],
     },
   ];
@@ -168,6 +170,7 @@ async function main() {
             status: t.status,
             priority: t.priority,
             orderIndex: counters[t.status]++,
+            labels: t.labels,
             projectId: project.id,
             assigneeId: users[t.assignee].id,
             dueDate: t.dueDate,

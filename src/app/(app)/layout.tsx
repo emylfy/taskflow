@@ -19,18 +19,20 @@ async function resolveAuthContext() {
       prisma.notification.count({ where: { userId: user.id, readAt: null } }),
     ]);
     let prioritySupport = false;
+    let planName: string | null = null;
     if (member) {
       const plan = await getActivePlan(member.organizationId);
       prioritySupport = !!plan?.features.flags.prioritySupport;
+      planName = plan?.planName ?? null;
     }
-    return { user, org: member?.organization ?? null, unreadCount, prioritySupport };
+    return { user, org: member?.organization ?? null, unreadCount, prioritySupport, planName };
   } catch {
-    return { user: null, org: null, unreadCount: 0, prioritySupport: false };
+    return { user: null, org: null, unreadCount: 0, prioritySupport: false, planName: null };
   }
 }
 
 export default async function AppShellLayout({ children }: { children: React.ReactNode }) {
-  const { user, org, unreadCount, prioritySupport } = await resolveAuthContext();
+  const { user, org, unreadCount, prioritySupport, planName } = await resolveAuthContext();
   const userName = user?.name ?? 'Гость';
   const orgName = org?.name ?? 'Команда TaskFlow';
   const isAuthed = !!user;
@@ -38,7 +40,7 @@ export default async function AppShellLayout({ children }: { children: React.Rea
   return (
     <MobileNavProvider>
       <div className={styles.shell}>
-        <Sidebar orgName={orgName} isAuthed={isAuthed} />
+        <Sidebar orgName={orgName} planName={planName ?? undefined} isAuthed={isAuthed} />
         <div className={styles.column}>
           <TopBar user={userName} unreadCount={unreadCount} prioritySupport={prioritySupport} />
           <main className={styles.main}>{children}</main>

@@ -135,6 +135,30 @@ export default async function MyTasksPage({
           </div>
         </div>
         <div style={{ flex: 1 }} />
+        <button type="button" className={styles.calBtn}>
+          <I.Calendar size={15} />
+          Календарь
+        </button>
+      </div>
+
+      <div className={styles.chips}>
+        <span className={styles.chip}>
+          <I.Folder size={13} />
+          Проект: все
+        </span>
+        <span className={`${styles.chip} ${styles.chipActive}`}>
+          <I.CheckCircle size={13} />
+          Статус: активные
+        </span>
+        <span className={styles.chip}>
+          <I.Flag size={13} />
+          Приоритет: любой
+        </span>
+        <span className={styles.chipSep} />
+        <span className={styles.chipAdd}>
+          <I.Plus size={13} />
+          Фильтр
+        </span>
       </div>
 
       <div className={styles.tabs}>
@@ -187,6 +211,7 @@ export default async function MyTasksPage({
                 <ProjectIcon name={t.project.name} size={14} />
                 {t.project.name}
               </Link>
+              {t.labels.length > 0 ? <span className={styles.tag}>{t.labels[0]}</span> : null}
               <StatusPill status={STATUS_KEY[t.status]} size="sm" />
               <div className={`${styles.due} ${due.overdue ? styles.dueOverdue : ''}`}>{due.label}</div>
               <Avatar name={user.name ?? user.email} size={24} />
