@@ -62,6 +62,16 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: false,
   },
+  // Связывание аккаунтов: если пользователь вошёл по ссылке на почту, а затем
+  // привязывает Яндекс ID с тем же email — это один аккаунт, можно входить
+  // обоими способами. Без этого вход через Яндекс под существующим email
+  // завершался бы ошибкой.
+  account: {
+    accountLinking: {
+      enabled: true,
+      trustedProviders: ['yandex'],
+    },
+  },
   plugins: [
     magicLink({
       sendMagicLink: async ({ email, url }) => {

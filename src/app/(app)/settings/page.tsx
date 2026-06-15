@@ -3,10 +3,13 @@ import { I } from '@/components/icons/Icons';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { cookies } from 'next/headers';
 import { requireUser } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { updateProfile, removeAvatar } from '@/server/actions/profile';
 import { AvatarUploader } from './AvatarUploader';
+import { LoginMethods } from './LoginMethods';
+import { AccountDangerZone } from './AccountDangerZone';
 import styles from './settings.module.css';
 
 export const metadata = { title: 'Настройки профиля — TaskFlow' };
@@ -74,7 +77,12 @@ export default async function SettingsPage() {
     select: { providerId: true },
   });
   const hasYandex = accounts.some((a) => a.providerId === 'yandex');
-  const hasMagic = accounts.some((a) => a.providerId === 'magic-link') || !hasYandex;
+
+  // Привязка Яндекса доступна, только если OAuth настроен на сервере и это не
+  // демо-вход (демо не создаёт сессию better-auth — привязывать нечего).
+  const yandexEnabled = !!process.env.YANDEX_CLIENT_ID && !!process.env.YANDEX_CLIENT_SECRET;
+  const cookieStore = await cookies();
+  const isDemo = !!cookieStore.get('tf-demo-user')?.value;
 
   return (
     <div className={styles.layout}>
@@ -180,23 +188,7 @@ export default async function SettingsPage() {
               </div>
             </div>
 
-            <div className={styles.loginCard}>
-              <div className={styles.loginTitle}>Способы входа в аккаунт</div>
-              <div className={styles.loginRow}>
-                <span className={`${styles.radio} ${hasYandex ? styles.radioOn : ''}`}>
-                  {hasYandex && <span className={styles.radioDot} />}
-                </span>
-                <span className={styles.loginName}>Яндекс ID</span>
-                <span className={styles.loginDesc}>· {hasYandex ? 'привязан' : 'не привязан'}</span>
-              </div>
-              <div className={styles.loginRow}>
-                <span className={`${styles.radio} ${hasMagic ? styles.radioOn : ''}`}>
-                  {hasMagic && <span className={styles.radioDot} />}
-                </span>
-                <span className={styles.loginName}>Ссылка на почту</span>
-                <span className={styles.loginDesc}>· одноразовая ссылка для входа</span>
-              </div>
-            </div>
+            <LoginMethods hasYandex={hasYandex} yandexEnabled={yandexEnabled} isDemo={isDemo} />
 
             <div className={styles.saveRow}>
               <Button variant="primary" type="submit">
@@ -204,6 +196,8 @@ export default async function SettingsPage() {
               </Button>
             </div>
           </form>
+
+          <AccountDangerZone />
         </div>
       </div>
     </div>

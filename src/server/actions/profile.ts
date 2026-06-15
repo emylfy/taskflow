@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { requireUser } from '@/lib/session';
+import { sendEmail } from '@/lib/email';
 
 export async function updateProfile(formData: FormData) {
   const user = await requireUser();
@@ -56,4 +57,44 @@ export async function removeAvatar() {
   const user = await requireUser();
   await prisma.user.update({ where: { id: user.id }, data: { image: null } });
   revalidatePath('/', 'layout');
+}
+
+// Отвязать Яндекс ID. Удаляем Account напрямую: вход по ссылке на почту всегда
+// остаётся доступным, поэтому это безопасно и обходит запрет better-auth на
+// удаление «последнего» способа входа.
+export async function unlinkYandex() {
+  const user = await requireUser();
+  await prisma.account.deleteMany({ where: { userId: user.id, providerId: 'yandex' } });
+  revalidatePath('/', 'layout');
+}
+
+// Заявка на удаление аккаунта (в духе 152-ФЗ). Реального стирания не делаем —
+// отправляем заявку оператору на почту и подтверждение пользователю. Если SMTP
+// не настроен, sendEmail тихо логирует (best-effort), экшен не падает.
+export async function requestAccountDeletion() {
+  const user = await requireUser();
+  const operator = process.env.SUPPORT_EMAIL || process.env.SMTP_USER || 'support@taskflow.ru';
+  const when = new Date().toLocaleString('ru-RU');
+
+  await sendEmail({
+    to: operator,
+    subject: `Заявка на удаление аккаунта · ${user.email}`,
+    text:
+      `Поступила заявка на удаление аккаунта.\n\n` +
+      `Имя: ${user.name}\nEmail: ${user.email}\nID: ${user.id}\nКогда: ${when}\n\n` +
+      `Обработайте обращение и удалите персональные данные в установленный срок (152-ФЗ).`,
+  });
+
+  await sendEmail({
+    to: user.email,
+    subject: 'Заявка на удаление аккаунта принята · TaskFlow',
+    text:
+      `Здравствуйте!\n\n` +
+      `Мы получили вашу заявку на удаление аккаунта ${user.email}. ` +
+      `Обращение будет обработано, а данные удалены в установленный срок. ` +
+      `Если заявку отправляли не вы — просто проигнорируйте это письмо.\n\n` +
+      `Команда TaskFlow`,
+  });
+
+  return { ok: true };
 }
