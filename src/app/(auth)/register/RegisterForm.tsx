@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { I } from '@/components/icons/Icons';
 import { signIn } from '@/lib/auth-client';
+import { ruAuthError } from '@/lib/auth-errors';
 import { registerDemo } from '@/server/actions/demo';
 import styles from '../auth.module.css';
 
@@ -36,7 +37,7 @@ export function RegisterForm({ demoEnabled = false }: { demoEnabled?: boolean })
       });
       setDone(true);
     } catch (err) {
-      setError((err as Error).message);
+      setError(ruAuthError(err));
     } finally {
       setLoading(false);
     }

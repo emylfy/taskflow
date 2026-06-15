@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { requireUser } from '@/lib/session';
 
@@ -52,4 +53,16 @@ export async function markAllAsRead() {
     data: { readAt: new Date() },
   });
   revalidatePath('/notifications');
+}
+
+// Помечает уведомление прочитанным и ведёт к связанному объекту (задаче,
+// проекту, странице участников/оплаты). Используется как действие клика по
+// строке уведомления, чтобы они не были тупиком.
+export async function openNotification(notificationId: string, href: string) {
+  const user = await requireUser();
+  await prisma.notification.updateMany({
+    where: { id: notificationId, userId: user.id, readAt: null },
+    data: { readAt: new Date() },
+  });
+  redirect(href || '/notifications');
 }

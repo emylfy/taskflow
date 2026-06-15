@@ -11,10 +11,12 @@ import styles from './settings.module.css';
 export const metadata = { title: 'Настройки профиля — TaskFlow' };
 export const dynamic = 'force-dynamic';
 
-const MENU = [
-  { icon: <I.User size={16} />, label: 'Профиль', active: true },
-  { icon: <I.Bell size={16} />, label: 'Уведомления', href: '/notifications' },
-  { icon: <I.CreditCard size={16} />, label: 'Подписка', href: '/admin/billing' },
+// «Профиль» — единственный раздел настроек, он отображается на этой странице.
+// Остальное — это переходы в связанные страницы приложения (а не вкладки
+// настроек), поэтому выносим их в отдельный блок и помечаем стрелкой.
+const RELATED = [
+  { icon: <I.Bell size={16} />, label: 'Все уведомления', href: '/notifications' },
+  { icon: <I.CreditCard size={16} />, label: 'Тарифы и оплата', href: '/admin/billing' },
 ];
 
 const TIMEZONES: { value: string; label: string }[] = [
@@ -75,19 +77,28 @@ export default async function SettingsPage() {
     <div className={styles.layout}>
       <aside className={styles.menu}>
         <div className={styles.menuTitle}>Настройки</div>
-        {MENU.map((m) =>
-          m.href ? (
-            <a key={m.label} href={m.href} className={styles.item}>
-              {m.icon}
-              {m.label}
-            </a>
-          ) : (
-            <div key={m.label} className={`${styles.item} ${m.active ? styles.itemActive : ''}`}>
-              {m.icon}
-              {m.label}
-            </div>
-          )
-        )}
+        <div className={`${styles.item} ${styles.itemActive}`}>
+          <I.User size={16} />
+          Профиль
+        </div>
+        <div
+          style={{
+            margin: '14px 8px 6px',
+            fontSize: 11,
+            textTransform: 'uppercase',
+            letterSpacing: 0.4,
+            color: '#8B939C',
+          }}
+        >
+          Связанные разделы
+        </div>
+        {RELATED.map((m) => (
+          <a key={m.label} href={m.href} className={styles.item}>
+            {m.icon}
+            {m.label}
+            <span style={{ marginLeft: 6, color: '#8B939C' }}>›</span>
+          </a>
+        ))}
       </aside>
 
       <div className={styles.main}>

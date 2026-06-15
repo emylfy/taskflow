@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { redirect } from 'next/navigation';
 import { I } from '@/components/icons/Icons';
 import { Button } from '@/components/ui/Button';
 import { prisma } from '@/lib/prisma';
@@ -29,7 +30,10 @@ export default async function BillingPage({
     where: { userId: user.id },
     include: { organization: true },
   });
-  if (!member) throw new Error('Вы не состоите ни в одной организации');
+  if (!member) redirect('/onboarding');
+  // Менять тариф и проводить оплату может только владелец/администратор —
+  // сервер это тоже проверяет (startCheckout), но прячем кнопки и в UI.
+  const isAdmin = member.role === 'OWNER' || member.role === 'ADMIN';
 
   // Возврат с ЮKassa: локально вебхук не может достучаться до localhost, поэтому
   // подтверждаем оплату здесь — перезапрашиваем статус последнего ожидающего
@@ -90,6 +94,12 @@ export default async function BillingPage({
           </span>
         </div>
 
+        {!isAdmin ? (
+          <p style={{ color: '#5B6670' }}>
+            Тариф меняет владелец или администратор организации. Вам доступен просмотр текущего
+            тарифа и лимитов.
+          </p>
+        ) : null}
         {status === 'free-activated' ? (
           <p style={{ color: '#2E7D3E' }}>Тариф «Бесплатный» активирован.</p>
         ) : null}
@@ -127,16 +137,22 @@ export default async function BillingPage({
                   <span className={styles.planPriceSuffix}>{suffix}</span>
                 </div>
                 <div className={styles.planNote}>за всю команду, с НДС</div>
-                <form action={startCheckoutForm.bind(null, { organizationId: member.organizationId, planId: p.id })}>
-                  <Button
-                    type="submit"
-                    variant={isPopular && !isCurrent ? 'primary' : 'secondary'}
-                    block
-                    disabled={isCurrent}
-                  >
-                    {ctaLabel}
+                {isAdmin ? (
+                  <form action={startCheckoutForm.bind(null, { organizationId: member.organizationId, planId: p.id })}>
+                    <Button
+                      type="submit"
+                      variant={isPopular && !isCurrent ? 'primary' : 'secondary'}
+                      block
+                      disabled={isCurrent}
+                    >
+                      {ctaLabel}
+                    </Button>
+                  </form>
+                ) : (
+                  <Button variant="secondary" block disabled>
+                    {isCurrent ? 'Текущий тариф' : 'Только для администратора'}
                   </Button>
-                </form>
+                )}
                 <div className={styles.planSep} />
                 <ul className={styles.planFeatures}>
                   {features.display.map((f) => (
@@ -152,7 +168,7 @@ export default async function BillingPage({
         </div>
       </div>
 
-      {focused && focused.priceRub > 0 ? (
+      {isAdmin && focused && focused.priceRub > 0 ? (
         <aside className={styles.payModal}>
           <div className={styles.payHead}>
             <div className={styles.payTitle}>Оплата тарифа</div>

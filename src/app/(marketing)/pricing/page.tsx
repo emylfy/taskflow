@@ -5,6 +5,7 @@ import { Logo } from '@/components/ui/Logo';
 import { Button } from '@/components/ui/Button';
 import { prisma } from '@/lib/prisma';
 import { parseFeatures } from '@/lib/plan-limits';
+import { getCurrentUser } from '@/lib/session';
 import styles from './pricing.module.css';
 
 export const metadata = { title: 'Тарифы — TaskFlow' };
@@ -19,18 +20,32 @@ function ctaLabelFor(planName: string): string {
 }
 
 export default async function PricingPage() {
-  const plans = await prisma.plan.findMany({ orderBy: { priceRub: 'asc' } });
+  const [plans, user] = await Promise.all([
+    prisma.plan.findMany({ orderBy: { priceRub: 'asc' } }),
+    getCurrentUser(),
+  ]);
+  const isAuthed = !!user;
 
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <Logo size={20} />
-        <div style={{ flex: 1 }} />
-        <Link href="/login">
-          <Button variant="ghost" size="sm">
-            Войти
-          </Button>
+        <Link href="/">
+          <Logo size={20} />
         </Link>
+        <div style={{ flex: 1 }} />
+        {isAuthed ? (
+          <Link href="/projects">
+            <Button variant="primary" size="sm">
+              Открыть приложение
+            </Button>
+          </Link>
+        ) : (
+          <Link href="/login">
+            <Button variant="ghost" size="sm">
+              Войти
+            </Button>
+          </Link>
+        )}
       </header>
 
       <main className={styles.main}>
@@ -45,7 +60,13 @@ export default async function PricingPage() {
             const isFeatured = p.priceRub > 0 && idx === 1;
             const priceLabel = p.priceRub === 0 ? '0 ₽' : `${PRICE_FORMATTER.format(p.priceRub)} ₽`;
             const suffix = p.priceRub === 0 ? 'навсегда' : 'в месяц';
-            const href = p.priceRub === 0 ? '/register' : `/register?planId=${p.id}`;
+            const href = isAuthed
+              ? p.priceRub === 0
+                ? '/projects'
+                : `/admin/billing?focus=${p.id}`
+              : p.priceRub === 0
+                ? '/register'
+                : `/register?planId=${p.id}`;
             return (
               <div key={p.id} className={`${styles.plan} ${isFeatured ? styles.planFeatured : ''}`}>
                 {isFeatured && <div className={styles.badge}>Популярный</div>}

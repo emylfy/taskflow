@@ -7,7 +7,10 @@ import { Tag } from '@/components/ui/Badge';
 import { AvatarStack } from '@/components/ui/AvatarStack';
 import { PRIO_MAP } from '@/components/ui/Badge';
 import { FREE_FEATURES, TEAM_FEATURES, BUSINESS_FEATURES } from '@/lib/plan-limits';
+import { getCurrentUser } from '@/lib/session';
 import styles from './landing.module.css';
+
+export const dynamic = 'force-dynamic';
 
 const ADVANTAGES = [
   {
@@ -93,7 +96,9 @@ const PLANS = [
   },
 ];
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const user = await getCurrentUser();
+  const isAuthed = !!user;
   return (
     <div className={styles.page}>
       <header className={styles.header}>
@@ -105,17 +110,27 @@ export default function LandingPage() {
           <a href="#business">Для бизнеса</a>
         </nav>
         <div className={styles.spacer} />
-        <Link href="/login">
-          <Button variant="ghost" size="sm">
-            Войти
-          </Button>
-        </Link>
-        <div style={{ width: 10 }} />
-        <Link href="/register">
-          <Button variant="primary" size="sm">
-            Начать бесплатно
-          </Button>
-        </Link>
+        {isAuthed ? (
+          <Link href="/projects">
+            <Button variant="primary" size="sm">
+              Открыть приложение
+            </Button>
+          </Link>
+        ) : (
+          <>
+            <Link href="/login">
+              <Button variant="ghost" size="sm">
+                Войти
+              </Button>
+            </Link>
+            <div style={{ width: 10 }} />
+            <Link href="/register">
+              <Button variant="primary" size="sm">
+                Начать бесплатно
+              </Button>
+            </Link>
+          </>
+        )}
       </header>
 
       <section className={styles.hero}>
@@ -132,14 +147,24 @@ export default function LandingPage() {
           чаты и совместное редактирование — в одном месте.
         </p>
         <div className={styles.heroCta}>
-          <Link href="/register">
-            <Button variant="primary" size="lg">Начать бесплатно</Button>
-          </Link>
-          <Link href="/login">
-            <Button variant="secondary" size="lg">Войти</Button>
-          </Link>
+          {isAuthed ? (
+            <Link href="/projects">
+              <Button variant="primary" size="lg">Открыть приложение</Button>
+            </Link>
+          ) : (
+            <>
+              <Link href="/register">
+                <Button variant="primary" size="lg">Начать бесплатно</Button>
+              </Link>
+              <Link href="/login">
+                <Button variant="secondary" size="lg">Войти</Button>
+              </Link>
+            </>
+          )}
         </div>
-        <div className={styles.heroNote}>Без карты · До 3 пользователей навсегда</div>
+        <div className={styles.heroNote}>
+          {isAuthed ? 'С возвращением — ваши проекты ждут.' : 'Без карты · До 3 пользователей навсегда'}
+        </div>
       </section>
 
       <section className={styles.previewWrap}>
@@ -221,7 +246,7 @@ export default function LandingPage() {
               <li><I.Check size={16} stroke="#2E7D3E" />Закрывающие документы в электронном виде</li>
             </ul>
             <div className={styles.businessCta}>
-              <Link href="/register">
+              <Link href={isAuthed ? '/admin/billing' : '/register'}>
                 <Button variant="primary" size="lg">Попробовать Бизнес 14 дней</Button>
               </Link>
               <a href="mailto:sales@taskflow.ru">
@@ -246,7 +271,7 @@ export default function LandingPage() {
                 <span className={styles.planPriceValue}>{p.price}</span>
                 <span className={styles.planPriceSuffix}>{p.suffix}</span>
               </div>
-              <Link href="/pricing">
+              <Link href={isAuthed ? '/admin/billing' : '/pricing'}>
                 <Button variant={p.variant} block>
                   {p.cta}
                 </Button>

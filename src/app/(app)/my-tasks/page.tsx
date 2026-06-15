@@ -1,6 +1,5 @@
 import * as React from 'react';
 import Link from 'next/link';
-import { I } from '@/components/icons/Icons';
 import { Avatar } from '@/components/ui/Avatar';
 import { ProjectIcon } from '@/components/ui/ProjectIcon';
 import { StatusPill, PriorityBar } from '@/components/ui/Badge';
@@ -134,31 +133,6 @@ export default async function MyTasksPage({
             {counts.all} активных · {counts.overdue} просрочены · {completedThisMonth} завершены за месяц
           </div>
         </div>
-        <div style={{ flex: 1 }} />
-        <button type="button" className={styles.calBtn}>
-          <I.Calendar size={15} />
-          Календарь
-        </button>
-      </div>
-
-      <div className={styles.chips}>
-        <span className={styles.chip}>
-          <I.Folder size={13} />
-          Проект: все
-        </span>
-        <span className={`${styles.chip} ${styles.chipActive}`}>
-          <I.CheckCircle size={13} />
-          Статус: активные
-        </span>
-        <span className={styles.chip}>
-          <I.Flag size={13} />
-          Приоритет: любой
-        </span>
-        <span className={styles.chipSep} />
-        <span className={styles.chipAdd}>
-          <I.Plus size={13} />
-          Фильтр
-        </span>
       </div>
 
       <div className={styles.tabs}>

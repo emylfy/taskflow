@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { redirect } from 'next/navigation';
 import { I } from '@/components/icons/Icons';
 import { Avatar } from '@/components/ui/Avatar';
 import { prisma } from '@/lib/prisma';
@@ -25,7 +26,7 @@ function relTime(d: Date): string {
 export default async function MembersPage() {
   const user = await requireUser();
   const myMember = await prisma.member.findFirst({ where: { userId: user.id } });
-  if (!myMember) throw new Error('Нет организации');
+  if (!myMember) redirect('/onboarding');
 
   const orgId = myMember.organizationId;
   const isAdmin = myMember.role === 'OWNER' || myMember.role === 'ADMIN';

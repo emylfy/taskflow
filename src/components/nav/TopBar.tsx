@@ -56,7 +56,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         aria-label="Приоритетная поддержка"
       >
         <I.Shield size={11} stroke="#fff" />
-        Priority
+        Приоритет
       </span>
     ) : null}
     <Link

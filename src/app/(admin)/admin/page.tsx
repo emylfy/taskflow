@@ -1,5 +1,6 @@
 import * as React from 'react';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { I } from '@/components/icons/Icons';
 import { Avatar } from '@/components/ui/Avatar';
 import { prisma } from '@/lib/prisma';
@@ -21,11 +22,13 @@ const ACTION_LABEL: Record<string, string> = {
   'task.status.in_progress': 'взял(а) задачу в работу',
   'task.status.in_review': 'отправил(а) задачу на проверку',
   'task.status.done': 'завершил(а) задачу',
+  'task.version.restore': 'восстановил(а) версию описания',
   'member.invite': 'пригласил(а) участника',
   'member.role.change': 'изменил(а) роль участника',
   'member.remove': 'удалил(а) участника',
   'subscription.checkout': 'оформил(а) оплату подписки',
   'subscription.payment.succeeded': 'оплатил(а) подписку',
+  'subscription.payment.demo': 'оплатил(а) подписку (демо-режим)',
   'subscription.activate.free': 'активировал(а) бесплатный тариф',
   'organization.create': 'создал(а) организацию',
 };
@@ -48,7 +51,7 @@ export default async function AdminDashboardPage() {
     where: { userId: user.id },
     include: { organization: true },
   });
-  if (!member) throw new Error('Вы не состоите ни в одной организации');
+  if (!member) redirect('/onboarding');
 
   const orgId = member.organizationId;
   const orgName = member.organization.name;

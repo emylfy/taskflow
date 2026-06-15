@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { I } from '@/components/icons/Icons';
 import { signIn } from '@/lib/auth-client';
+import { ruAuthError } from '@/lib/auth-errors';
 import { loginAsDemo } from '@/server/actions/demo';
 import styles from '../auth.module.css';
 
@@ -27,7 +28,7 @@ export function LoginForm({ demoEnabled, yandexEnabled }: Props) {
       await signIn.oauth2({ providerId: 'yandex', callbackURL: '/projects' });
     } catch (e) {
       setStatus('error');
-      setError((e as Error).message);
+      setError(ruAuthError(e));
     }
   }
 
@@ -40,7 +41,7 @@ export function LoginForm({ demoEnabled, yandexEnabled }: Props) {
       setStatus('sent');
     } catch (e) {
       setStatus('error');
-      setError((e as Error).message);
+      setError(ruAuthError(e));
     }
   }
 

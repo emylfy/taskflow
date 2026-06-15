@@ -136,7 +136,6 @@ export default async function SearchPage({
             placeholder="Поиск по задачам, проектам, участникам…"
             autoFocus
           />
-          <span className={styles.esc}>Esc</span>
         </form>
         <div className={styles.results}>
           {!q ? (
@@ -244,16 +243,6 @@ export default async function SearchPage({
           )}
         </div>
         <div className={styles.foot}>
-          <span>
-            <span className={styles.kbd}>↑↓</span>выбрать
-          </span>
-          <span>
-            <span className={styles.kbd}>⏎</span>открыть
-          </span>
-          <span>
-            <span className={styles.kbd}>Esc</span>закрыть
-          </span>
-          <span style={{ flex: 1 }} />
           <span>Поиск по организации «{orgName}»</span>
         </div>
       </div>

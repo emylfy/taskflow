@@ -106,11 +106,14 @@ export const Board: React.FC<BoardProps> = ({
       const next = prev.map((c) => ({ ...c, tasks: [...c.tasks] }));
       const from = next.find((c) => c.id === fromColumn.id)!;
       const to = next.find((c) => c.id === toColumn.id)!;
-      const [moved] = from.tasks.splice(fromIndex, 1);
       if (from.id === to.id) {
-        to.tasks.splice(toIndex, 0, moved);
-        to.tasks = arrayMove(to.tasks, to.tasks.indexOf(moved), toIndex);
+        // Перестановка внутри колонки тем же расчётом, что и на сервере
+        // (arrayMove: убрать с fromIndex, вставить на toIndex) — чтобы после
+        // router.refresh() оптимистичный порядок совпал с сохранённым и
+        // карточка не «прыгала».
+        to.tasks = arrayMove(from.tasks, fromIndex, toIndex);
       } else {
+        const [moved] = from.tasks.splice(fromIndex, 1);
         to.tasks.splice(toIndex, 0, moved);
       }
       return next;
@@ -125,7 +128,7 @@ export const Board: React.FC<BoardProps> = ({
       router.refresh();
     } catch (err) {
       console.error('moveTask failed:', err);
-      setColumns(initialColumns);
+      router.refresh(); // откатываемся к актуальному порядку с сервера
     }
   }
 

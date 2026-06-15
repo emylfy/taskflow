@@ -8,7 +8,7 @@ import {
   listNotifications,
   getCounts,
   markAllAsRead,
-  markAsRead,
+  openNotification,
   type NotificationFilter,
 } from '@/server/actions/notifications';
 import styles from './notifications.module.css';
@@ -37,6 +37,18 @@ function iconFor(type: string): IconKey {
   if (type.startsWith('member.invited')) return 'invite';
   if (type.startsWith('subscription')) return 'subscription';
   return 'edit';
+}
+
+// Куда вести при клике по уведомлению — к связанной задаче/проекту/разделу.
+function hrefFor(n: { type: string; payload: unknown }): string {
+  const p = (n.payload as Record<string, unknown>) ?? {};
+  const taskId = p.taskId ? String(p.taskId) : '';
+  const projectId = p.projectId ? String(p.projectId) : '';
+  if (taskId && projectId) return `/projects/${projectId}/tasks/${taskId}`;
+  if (projectId) return `/projects/${projectId}`;
+  if (n.type.startsWith('member')) return '/admin/members';
+  if (n.type.startsWith('subscription')) return '/admin/billing';
+  return '/notifications';
 }
 
 function formatRelative(d: Date): string {
@@ -167,10 +179,11 @@ export default async function NotificationsPage({
             const d = describe(n, projectsById, tasksById);
             const unread = !n.readAt;
             const isMention = n.type === 'mention' || n.type.includes('mention');
+            const href = hrefFor(n);
             return (
               <form
                 key={n.id}
-                action={markAsRead.bind(null, n.id)}
+                action={openNotification.bind(null, n.id, href)}
                 className={`${styles.item} ${unread ? styles.unread : ''}`}
                 style={{ padding: 0 }}
               >
@@ -185,7 +198,7 @@ export default async function NotificationsPage({
                     textAlign: 'left',
                     background: 'transparent',
                     border: 0,
-                    cursor: unread ? 'pointer' : 'default',
+                    cursor: 'pointer',
                   }}
                 >
                   {unread && <span className={styles.unreadDot} />}

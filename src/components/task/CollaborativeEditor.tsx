@@ -5,6 +5,7 @@ import '@blocknote/mantine/style.css';
 
 import * as React from 'react';
 import { BlockNoteEditor } from '@blocknote/core';
+import { ru } from '@blocknote/core/locales';
 import { BlockNoteView } from '@blocknote/mantine';
 import { useCreateBlockNote } from '@blocknote/react';
 import * as Y from 'yjs';
@@ -23,6 +24,16 @@ type Props = {
   initialSnapshot?: string | null;
   /** Версии описания (новейшие сверху) для панели истории/отката. */
   versions?: TaskVersion[];
+};
+
+// Русский словарь редактора. В библиотечной локали есть опечатка
+// («Ведите» вместо «Введите») — переопределяем плейсхолдер пустого блока.
+const RU_DICT = {
+  ...ru,
+  placeholders: {
+    ...ru.placeholders,
+    default: 'Введите текст или «/» для команд',
+  },
 };
 
 function base64ToBytes(b64: string): Uint8Array {
@@ -46,6 +57,7 @@ export const CollaborativeEditor: React.FC<Props> = ({
   }
 
   const editor = useCreateBlockNote({
+    dictionary: RU_DICT,
     collaboration: sessionRef.current
       ? {
           provider: sessionRef.current.provider,
