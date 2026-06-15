@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { I } from '@/components/icons/Icons';
 import { Logo } from '@/components/ui/Logo';
 import { Dropdown } from '@/components/ui/Dropdown';
@@ -37,15 +37,30 @@ type SidebarProps = {
 };
 
 export const Sidebar: React.FC<SidebarProps> = ({
-  active = 'projects',
+  active: activeProp,
   org,
   orgName = 'Команда TaskFlow',
   planName,
   isAuthed = true,
 }) => {
   const router = useRouter();
+  const pathname = usePathname();
   const { open, closeNav } = useMobileNav();
   const displayOrg = org ?? orgName;
+  // Активный пункт определяем по текущему адресу — раньше layout не передавал
+  // active, и подсветка всегда висела на «Проектах». Явный проп (админка) имеет
+  // приоритет над автоопределением.
+  const active: NavKey =
+    activeProp ??
+    (pathname.startsWith('/my-tasks')
+      ? 'mytasks'
+      : pathname.startsWith('/notifications')
+        ? 'notifications'
+        : pathname.startsWith('/chat')
+          ? 'chat'
+          : pathname.startsWith('/settings')
+            ? 'settings'
+            : 'projects');
   return (
   <>
   <div

@@ -42,7 +42,7 @@ export default async function AppShellLayout({ children }: { children: React.Rea
       <div className={styles.shell}>
         <Sidebar orgName={orgName} planName={planName ?? undefined} isAuthed={isAuthed} />
         <div className={styles.column}>
-          <TopBar user={userName} unreadCount={unreadCount} prioritySupport={prioritySupport} />
+          <TopBar user={userName} image={user?.image ?? undefined} unreadCount={unreadCount} prioritySupport={prioritySupport} />
           <main className={styles.main}>{children}</main>
         </div>
       </div>

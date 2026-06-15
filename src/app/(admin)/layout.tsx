@@ -41,7 +41,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <div style={{ display: 'flex', width: '100%', minHeight: '100vh' }}>
         <Sidebar active="settings" orgName={orgName} planName={planName ?? undefined} isAuthed={isAuthed} />
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-          <TopBar user={userName} unreadCount={unreadCount} prioritySupport={prioritySupport} />
+          <TopBar user={userName} image={user?.image ?? undefined} unreadCount={unreadCount} prioritySupport={prioritySupport} />
           <main style={{ flex: 1, overflow: 'auto' }}>{children}</main>
         </div>
       </div>

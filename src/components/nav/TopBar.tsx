@@ -15,6 +15,7 @@ type TopBarProps = {
   searchValue?: string;
   actions?: React.ReactNode;
   user?: string;
+  image?: string | null;
   unreadCount?: number;
   prioritySupport?: boolean;
 };
@@ -26,6 +27,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   searchValue = 'Поиск по задачам, проектам, участникам…',
   actions,
   user = 'Иван Соколов',
+  image,
   unreadCount = 0,
   prioritySupport = false,
 }) => {
@@ -84,7 +86,7 @@ export const TopBar: React.FC<TopBarProps> = ({
       <I.Plus size={16} stroke="#5B6670" />
     </Link>
     <Link href="/settings" aria-label="Профиль и настройки" style={{ display: 'inline-flex', borderRadius: '50%' }}>
-      <Avatar name={user} size={32} />
+      <Avatar name={user} src={image} size={32} />
     </Link>
   </header>
   );

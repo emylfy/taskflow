@@ -22,7 +22,9 @@ export async function updateProfile(formData: FormData) {
     data: { name, timezone, position, locale },
   });
 
-  revalidatePath('/settings');
+  // Имя/аватар видны в общей шапке (TopBar) на всех страницах — ревалидируем
+  // layout, а не только /settings, чтобы изменения подхватились сразу везде.
+  revalidatePath('/', 'layout');
 }
 
 const MAX_AVATAR_BYTES = 512 * 1024; // 512 КБ
@@ -47,11 +49,11 @@ export async function updateAvatar(formData: FormData) {
   const dataUri = `data:${file.type};base64,${buf.toString('base64')}`;
 
   await prisma.user.update({ where: { id: user.id }, data: { image: dataUri } });
-  revalidatePath('/settings');
+  revalidatePath('/', 'layout');
 }
 
 export async function removeAvatar() {
   const user = await requireUser();
   await prisma.user.update({ where: { id: user.id }, data: { image: null } });
-  revalidatePath('/settings');
+  revalidatePath('/', 'layout');
 }
