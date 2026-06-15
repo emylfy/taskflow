@@ -29,8 +29,18 @@ async function main() {
     },
   });
 
+  // Владелец готового воркспейса. По умолчанию — демо-пользователь, но на
+  // сервере можно задать SEED_OWNER_EMAIL (и SEED_OWNER_NAME): тогда все
+  // проекты/задачи/команда принадлежат ТВОЕМУ реальному аккаунту, и на защите
+  // входишь обычным способом (Яндекс ID / ссылка на почту) как владелец —
+  // демо-вход можно выключить (DEMO_MODE=false). emailVerified=true ниже +
+  // связывание аккаунтов означают, что вход через Яндекс под этим email
+  // подхватит именно этого владельца.
+  const ownerEmail = process.env.SEED_OWNER_EMAIL?.trim().toLowerCase() || 'ivan.sokolov@taskflow.ru';
+  const ownerName = process.env.SEED_OWNER_NAME?.trim() || 'Иван Соколов';
+
   const usersData = [
-    { name: 'Иван Соколов', email: 'ivan.sokolov@taskflow.ru', role: MemberRole.OWNER, position: 'Продуктовый дизайнер' },
+    { name: ownerName, email: ownerEmail, role: MemberRole.OWNER, position: 'Продуктовый дизайнер' },
     { name: 'Мария Петрова', email: 'maria.petrova@taskflow.ru', role: MemberRole.ADMIN, position: 'Руководитель проекта' },
     { name: 'Сергей Николаев', email: 'sergey.nikolaev@taskflow.ru', role: MemberRole.MEMBER, position: 'Бэкенд-разработчик' },
     { name: 'Елена Куликова', email: 'elena.kulikova@taskflow.ru', role: MemberRole.MEMBER, position: 'Продуктовый аналитик' },
