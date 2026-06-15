@@ -46,7 +46,7 @@
 
 .tableHead {
   display: grid;
-  grid-template-columns: 2.2fr 1.2fr 1fr 1fr 40px;
+  grid-template-columns: 2.2fr 1.2fr 1fr 1fr auto;
   gap: 14px;
   padding: 10px 18px;
   background: var(--panel);
@@ -60,7 +60,7 @@
 
 .row {
   display: grid;
-  grid-template-columns: 2.2fr 1.2fr 1fr 1fr 40px;
+  grid-template-columns: 2.2fr 1.2fr 1fr 1fr auto;
   gap: 14px;
   padding: 14px 18px;
   border-bottom: 1px solid #F0F1F4;
@@ -130,6 +130,13 @@
 .cellText {
   font-size: 13px;
   color: var(--text-2);
+}
+
+/* Колонка действия («Удалить»): прижимаем кнопку к правому краю и не даём ей
+   переноситься — раньше колонка была 40px, и текст вылезал за ячейку. */
+.actionCell {
+  justify-self: end;
+  white-space: nowrap;
 }
 
 .subSection {

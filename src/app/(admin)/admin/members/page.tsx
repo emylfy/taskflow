@@ -87,7 +87,7 @@ export default async function MembersPage() {
           <div>Роль</div>
           <div>Присоединился</div>
           <div>Активность</div>
-          <div />
+          <div className={styles.actionCell} />
         </div>
         {members.map((m) => {
           const isYou = m.user.id === user.id;
@@ -116,7 +116,7 @@ export default async function MembersPage() {
               <div className={styles.cellText}>
                 {lastActivity.has(m.user.id) ? relTime(lastActivity.get(m.user.id)!) : 'нет активности'}
               </div>
-              <div>
+              <div className={styles.actionCell}>
                 {isAdmin ? (
                   <RemoveButton
                     memberId={m.id}
