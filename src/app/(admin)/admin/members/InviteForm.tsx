@@ -57,6 +57,10 @@ export function InviteForm({ organizationId }: { organizationId: string }) {
       <SubmitBtn />
       {error ? <div style={{ width: '100%', color: '#B23A3A', fontSize: 13 }}>{error}</div> : null}
       {ok ? <div style={{ width: '100%', color: '#2E7D3E', fontSize: 13 }}>{ok}</div> : null}
+      <div style={{ width: '100%', fontSize: 12, color: '#8B939C', marginTop: 2 }}>
+        Введите email человека и роль — он станет участником сразу. Доступ откроется,
+        как только он войдёт под этим email (по ссылке на почту или через Яндекс ID).
+      </div>
     </form>
   );
 }

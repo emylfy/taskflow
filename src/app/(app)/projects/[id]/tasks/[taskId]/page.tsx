@@ -92,7 +92,7 @@ export default async function TaskDetailPage({
           </div>
           <div style={{ flex: 1 }} />
           <div className={styles.bannerHint}>
-            <I.Cursor size={12} stroke="#5B6670" />в реальном времени (Yjs CRDT)
+            <I.Cursor size={12} stroke="#5B6670" />в реальном времени
           </div>
         </div>
 
