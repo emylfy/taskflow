@@ -13,7 +13,7 @@ import styles from './mytasks.module.css';
 export const metadata = { title: 'Мои задачи — TaskFlow' };
 export const dynamic = 'force-dynamic';
 
-type Filter = 'all' | 'today' | 'week' | 'overdue';
+type Filter = 'all' | 'today' | 'week' | 'overdue' | 'done';
 
 const STATUS_KEY: Record<TaskStatus, StatusKey> = {
   TODO: 'todo',
@@ -111,17 +111,36 @@ export default async function MyTasksPage({
     },
   });
 
+  // Завершённые задачи: в активных вкладках они скрыты (status ≠ DONE), поэтому
+  // отдельной вкладкой «Завершённые» показываем последние закрытые задачи —
+  // иначе их вообще негде увидеть списком (только в колонке «Готово» на доске).
+  const doneRows = await prisma.task.findMany({
+    where: { assigneeId: user.id, status: 'DONE' },
+    include: { project: { select: { id: true, name: true } } },
+    orderBy: { updatedAt: 'desc' },
+    take: 100,
+  });
+  const showDone = filter === 'done';
+  const rows = showDone ? doneRows : filtered;
+
   const TABS: { key: Filter; t: string; n: number }[] = [
     { key: 'all', t: 'Все', n: counts.all },
     { key: 'today', t: 'Сегодня', n: counts.today },
     { key: 'week', t: 'На этой неделе', n: counts.week },
     { key: 'overdue', t: 'Просрочены', n: counts.overdue },
+    { key: 'done', t: 'Завершённые', n: doneRows.length },
   ];
 
   // Server Action для отметки задачи выполненной.
   async function markDone(taskId: string) {
     'use server';
     await moveTask({ taskId, status: 'DONE', orderIndex: 0 });
+  }
+
+  // Возврат завершённой задачи в работу (со вкладки «Завершённые»).
+  async function reopen(taskId: string) {
+    'use server';
+    await moveTask({ taskId, status: 'TODO', orderIndex: 0 });
   }
 
   return (
@@ -149,21 +168,21 @@ export default async function MyTasksPage({
       </div>
 
       <div className={styles.list}>
-        {filtered.length === 0 ? (
+        {rows.length === 0 ? (
           <div style={{ padding: 32, color: '#5B6670', textAlign: 'center' }}>
-            В этой категории нет задач.
+            {showDone ? 'Пока нет завершённых задач.' : 'В этой категории нет задач.'}
           </div>
         ) : null}
-        {filtered.map((t) => {
+        {rows.map((t) => {
           const due = formatDue(t.dueDate);
           return (
-            <div key={t.id} className={`${styles.row} ${due.overdue ? styles.overdue : ''}`}>
-              <form action={markDone.bind(null, t.id)}>
+            <div key={t.id} className={`${styles.row} ${!showDone && due.overdue ? styles.overdue : ''}`}>
+              <form action={(showDone ? reopen : markDone).bind(null, t.id)}>
                 <button
                   type="submit"
-                  className={styles.check}
-                  aria-label="Отметить выполненной"
-                  title="Отметить выполненной"
+                  className={`${styles.check} ${showDone ? styles.checkOn : ''}`}
+                  aria-label={showDone ? 'Вернуть в работу' : 'Отметить выполненной'}
+                  title={showDone ? 'Вернуть в работу' : 'Отметить выполненной'}
                   style={{ cursor: 'pointer', padding: 0 }}
                 />
               </form>
@@ -172,7 +191,7 @@ export default async function MyTasksPage({
                 <Link
                   href={`/projects/${t.projectId}/tasks/${t.id}`}
                   className={styles.rowTitle}
-                  style={{ textDecoration: 'none', color: 'inherit' }}
+                  style={{ textDecoration: showDone ? 'line-through' : 'none', color: showDone ? 'var(--text-3)' : 'inherit' }}
                 >
                   {t.title}
                 </Link>
@@ -187,7 +206,7 @@ export default async function MyTasksPage({
               </Link>
               {t.labels.length > 0 ? <span className={styles.tag}>{t.labels[0]}</span> : null}
               <StatusPill status={STATUS_KEY[t.status]} size="sm" />
-              <div className={`${styles.due} ${due.overdue ? styles.dueOverdue : ''}`}>{due.label}</div>
+              <div className={`${styles.due} ${!showDone && due.overdue ? styles.dueOverdue : ''}`}>{showDone ? 'завершена' : due.label}</div>
               <Avatar name={user.name ?? user.email} size={24} />
             </div>
           );

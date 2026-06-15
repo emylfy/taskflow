@@ -1,7 +1,8 @@
 'use server';
 
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { auth } from '@/lib/auth';
 import { DEMO_COOKIE_NAME } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { ensureOwnerOrganization } from '@/server/actions/organizations';
@@ -61,8 +62,22 @@ export async function registerDemo(input: { orgName: string; name: string; email
   redirect('/projects');
 }
 
-export async function logoutDemo() {
+// Полный выход. Старый logoutDemo чистил ТОЛЬКО демо-куку — при входе по почте
+// или через Яндекс реальная сессия better-auth оставалась активной, и «Выйти»
+// фактически не выходил. Завершаем серверную сессию better-auth И удаляем все
+// куки авторизации (better-auth.* + демо), чтобы выход работал для любого входа.
+export async function logout() {
+  const h = await headers();
+  try {
+    await auth.api.signOut({ headers: h });
+  } catch {
+    // Активной better-auth сессии нет (например, демо-вход) — это нормально.
+  }
   const c = await cookies();
-  c.delete(DEMO_COOKIE_NAME);
+  for (const ck of c.getAll()) {
+    if (ck.name.startsWith('better-auth') || ck.name === DEMO_COOKIE_NAME) {
+      c.delete(ck.name);
+    }
+  }
   redirect('/');
 }

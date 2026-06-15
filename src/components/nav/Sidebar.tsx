@@ -7,7 +7,7 @@ import { I } from '@/components/icons/Icons';
 import { Logo } from '@/components/ui/Logo';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { useMobileNav } from '@/components/nav/MobileNavProvider';
-import { logoutDemo } from '@/server/actions/demo';
+import { logout } from '@/server/actions/demo';
 import styles from './Sidebar.module.css';
 
 type NavKey = 'projects' | 'mytasks' | 'notifications' | 'chat' | 'settings';
@@ -74,6 +74,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         { label: 'Участники и роли', icon: <I.Users size={14} />, onClick: () => router.push('/admin/members') },
         { label: 'Тарифы и оплата', icon: <I.CreditCard size={14} />, onClick: () => router.push('/admin/billing') },
         { label: 'Журнал действий', icon: <I.Shield size={14} />, onClick: () => router.push('/admin/journal') },
+        { label: 'Выйти из аккаунта', icon: <I.ArrowRight size={14} />, onClick: () => { logout(); } },
       ]}
     />
 
@@ -88,7 +89,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <div className={styles.flex} />
 
     {isAuthed && (
-      <form action={logoutDemo} className={styles.logoutForm}>
+      <form action={logout} className={styles.logoutForm}>
         <button type="submit" className={styles.logoutBtn}>Выйти</button>
       </form>
     )}
