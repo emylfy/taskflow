@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { requireUser } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
-import { updateProfile, updateAvatar, removeAvatar } from '@/server/actions/profile';
+import { updateProfile, removeAvatar } from '@/server/actions/profile';
+import { AvatarUploader } from './AvatarUploader';
 import styles from './settings.module.css';
 
 export const metadata = { title: 'Настройки профиля — TaskFlow' };
@@ -111,25 +112,7 @@ export default async function SettingsPage() {
             <div style={{ flex: 1 }}>
               <div className={styles.photoTitle}>Ваш аватар</div>
               <div className={styles.photoHint}>JPEG, PNG, WEBP или GIF, до 512 КБ.</div>
-              <form
-                action={updateAvatar}
-                style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}
-              >
-                <label className={styles.fileButton}>
-                  <I.Image size={14} />
-                  Выбрать файл
-                  <input
-                    type="file"
-                    name="avatar"
-                    accept="image/png,image/jpeg,image/webp,image/gif"
-                    required
-                    className={styles.fileInput}
-                  />
-                </label>
-                <Button variant="secondary" type="submit">
-                  Загрузить
-                </Button>
-              </form>
+              <AvatarUploader />
               {profile.image && (
                 <form action={removeAvatar} style={{ marginTop: 6 }}>
                   <button
