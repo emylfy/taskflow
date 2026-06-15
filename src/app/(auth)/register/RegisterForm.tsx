@@ -18,7 +18,6 @@ export function RegisterForm({ demoEnabled = false }: { demoEnabled?: boolean })
   const [loading, setLoading] = React.useState(false);
   const [done, setDone] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [teamSize, setTeamSize] = React.useState('6–20 человек');
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -82,34 +81,6 @@ export function RegisterForm({ demoEnabled = false }: { demoEnabled?: boolean })
         {demoEnabled ? 'В демо письмо не отправляется — вход выполнится сразу' : 'Отправим ссылку для входа без пароля'}
       </div>
 
-      <div style={{ height: 14 }} />
-      <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 6 }}>Размер команды</div>
-      <div style={{ display: 'flex', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
-        {['1–5 человек', '6–20 человек', '21+ человек'].map((s, i) => {
-          const active = teamSize === s;
-          return (
-            <button
-              type="button"
-              key={s}
-              onClick={() => setTeamSize(s)}
-              style={{
-                flex: 1,
-                padding: '9px 8px',
-                fontSize: 13,
-                fontFamily: 'inherit',
-                cursor: 'pointer',
-                border: 'none',
-                borderLeft: i === 0 ? 'none' : '1px solid var(--border)',
-                background: active ? 'var(--accent-soft)' : 'transparent',
-                color: active ? 'var(--accent)' : 'var(--text-2)',
-                fontWeight: active ? 600 : 500,
-              }}
-            >
-              {s}
-            </button>
-          );
-        })}
-      </div>
       <div style={{ height: 18 }} />
       <Button variant="primary" size="lg" block type="submit" disabled={loading}>
         {loading

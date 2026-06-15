@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { I } from '@/components/icons/Icons';
 import { Avatar } from '@/components/ui/Avatar';
 import { useMobileNav } from '@/components/nav/MobileNavProvider';
@@ -29,6 +30,18 @@ export const TopBar: React.FC<TopBarProps> = ({
   prioritySupport = false,
 }) => {
   const { toggle } = useMobileNav();
+  const router = useRouter();
+  // Делаем подсказку «Ctrl K» настоящей: глобальный хоткей открывает поиск.
+  React.useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        router.push('/search');
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [router]);
   return (
   <header className={styles.bar}>
     <button type="button" className={styles.menuBtn} onClick={toggle} aria-label="Открыть меню">

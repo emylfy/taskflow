@@ -106,10 +106,9 @@ export default async function TaskDetailPage({
           versions={versions}
         />
 
-        <div className={styles.sectionLabel} style={{ marginTop: 22 }}>
-          Комментарии
+        <div style={{ marginTop: 22 }}>
+          <CommentList taskId={task.id} currentUser={user.name ?? user.email} initialComments={comments} />
         </div>
-        <CommentList taskId={task.id} currentUser={user.name ?? user.email} initialComments={comments} />
       </div>
 
       <aside className={styles.aside}>

@@ -18,7 +18,7 @@
 .sort {
   text-transform: none;
   font-weight: 500;
-  color: var(--accent);
+  color: var(--text-3);
   font-size: 12px;
   letter-spacing: 0;
 }
