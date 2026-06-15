@@ -9,24 +9,25 @@ import { Composer } from '@/components/chat/Composer';
 import { prisma } from '@/lib/prisma';
 import { requireUser } from '@/lib/session';
 import { listChatMessages } from '@/server/actions/chat';
+import { getUserTimezone } from '@/lib/datetime';
 import styles from './chat.module.css';
 
 export const metadata = { title: 'Чат проекта — TaskFlow' };
 export const dynamic = 'force-dynamic';
 
-function formatTime(d: Date): string {
-  return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+function formatTime(d: Date, tz: string): string {
+  return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: tz });
 }
 
-function dayLabel(d: Date): string {
+function dayLabel(d: Date, tz: string): string {
   const today = new Date();
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
   const sameDay = (a: Date, b: Date) =>
     a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-  if (sameDay(d, today)) return `Сегодня · ${d.toLocaleDateString('ru-RU', { day: '2-digit', month: 'long' })}`;
-  if (sameDay(d, yesterday)) return `Вчера · ${d.toLocaleDateString('ru-RU', { day: '2-digit', month: 'long' })}`;
-  return d.toLocaleDateString('ru-RU', { weekday: 'long', day: '2-digit', month: 'long' });
+  if (sameDay(d, today)) return `Сегодня · ${d.toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', timeZone: tz })}`;
+  if (sameDay(d, yesterday)) return `Вчера · ${d.toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', timeZone: tz })}`;
+  return d.toLocaleDateString('ru-RU', { weekday: 'long', day: '2-digit', month: 'long', timeZone: tz });
 }
 
 export default async function ChatPage({
@@ -36,6 +37,7 @@ export default async function ChatPage({
 }) {
   const { projectId } = await params;
   const user = await requireUser();
+  const tz = await getUserTimezone(user.id);
 
   const project = await prisma.project.findUnique({
     where: { id: projectId },
@@ -68,7 +70,7 @@ export default async function ChatPage({
   type DayBucket = { day: string; date: Date; items: typeof messages };
   const buckets: DayBucket[] = [];
   for (const m of messages) {
-    const label = dayLabel(m.createdAt);
+    const label = dayLabel(m.createdAt, tz);
     const last = buckets[buckets.length - 1];
     if (last && last.day === label) last.items.push(m);
     else buckets.push({ day: label, date: m.createdAt, items: [m] });
@@ -143,7 +145,7 @@ export default async function ChatPage({
                   <div className={styles.msgBody}>
                     <div className={styles.msgHead}>
                       <span className={styles.msgWho}>{m.author.name}</span>
-                      <span className={styles.msgTime}>{formatTime(m.createdAt)}</span>
+                      <span className={styles.msgTime}>{formatTime(m.createdAt, tz)}</span>
                     </div>
                     <div className={styles.msgText}>{m.content}</div>
                   </div>

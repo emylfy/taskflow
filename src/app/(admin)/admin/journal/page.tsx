@@ -9,6 +9,7 @@ import { requireUser } from '@/lib/session';
 import { getActivePlan } from '@/lib/plan-limits';
 import { listActivityLogs } from '@/server/actions/audit';
 import { withTargetLabels, TARGET_TYPE_RU } from '@/lib/activity-labels';
+import { getUserTimezone } from '@/lib/datetime';
 import styles from './journal.module.css';
 
 export const metadata = { title: 'Журнал действий — TaskFlow' };
@@ -48,6 +49,7 @@ export default async function JournalPage({
   const member = await prisma.member.findFirst({ where: { userId: user.id } });
   if (!member) redirect('/onboarding');
   const orgId = member.organizationId;
+  const tz = await getUserTimezone(user.id);
 
   const [logsRaw, plan, members] = await Promise.all([
     listActivityLogs(orgId, { action: filterAction, actorId: filterActorId }, 200),
@@ -146,6 +148,7 @@ export default async function JournalPage({
                 year: '2-digit',
                 hour: '2-digit',
                 minute: '2-digit',
+                timeZone: tz,
               })}
             </div>
             <div className={styles.cellActor}>

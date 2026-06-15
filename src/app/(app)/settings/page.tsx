@@ -34,9 +34,11 @@ const TIMEZONES: { value: string; label: string }[] = [
   { value: 'Asia/Kamchatka', label: 'Камчатка (UTC+12)' },
 ];
 
-const LANGUAGES: { value: string; label: string }[] = [
+// Интерфейс пока только на русском. English оставляем в списке, но недоступным
+// («скоро») — честно, без нерабочего переключения.
+const LANGUAGES: { value: string; label: string; disabled?: boolean }[] = [
   { value: 'ru', label: 'Русский' },
-  { value: 'en', label: 'English' },
+  { value: 'en', label: 'English — скоро', disabled: true },
 ];
 
 const selectStyle: React.CSSProperties = {
@@ -164,9 +166,13 @@ export default async function SettingsPage() {
                 <label style={{ display: 'block', fontSize: 13, color: '#5B6670', marginBottom: 6 }}>
                   Язык интерфейса
                 </label>
-                <select name="locale" defaultValue={profile.locale ?? 'ru'} style={selectStyle}>
+                <select
+                  name="locale"
+                  defaultValue={profile.locale === 'en' ? 'ru' : profile.locale ?? 'ru'}
+                  style={selectStyle}
+                >
                   {LANGUAGES.map((l) => (
-                    <option key={l.value} value={l.value}>
+                    <option key={l.value} value={l.value} disabled={l.disabled}>
                       {l.label}
                     </option>
                   ))}

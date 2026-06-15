@@ -7,6 +7,7 @@ import { CommentList } from '@/components/task/CommentList';
 import { CollaborativeEditorLoader as CollaborativeEditor } from '@/components/task/CollaborativeEditorLoader';
 import { TaskMetaPanel } from '@/components/task/TaskMetaPanel';
 import { requireUser } from '@/lib/session';
+import { getUserTimezone } from '@/lib/datetime';
 import styles from './task.module.css';
 
 export const metadata = { title: 'Задача — TaskFlow' };
@@ -19,6 +20,7 @@ export default async function TaskDetailPage({
 }) {
   const { id: projectId, taskId } = await params;
   const user = await requireUser();
+  const tz = await getUserTimezone(user.id);
 
   const task = await prisma.task.findUnique({
     where: { id: taskId },
@@ -50,6 +52,7 @@ export default async function TaskDetailPage({
       month: 'short',
       hour: '2-digit',
       minute: '2-digit',
+      timeZone: tz,
     }),
   }));
 
@@ -68,6 +71,7 @@ export default async function TaskDetailPage({
       month: 'short',
       hour: '2-digit',
       minute: '2-digit',
+      timeZone: tz,
     }),
     summary: 'Снимок CRDT-документа задачи',
   }));
