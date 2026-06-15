@@ -43,6 +43,18 @@ export async function inviteMember(input: { organizationId: string; email: strin
     });
   }
 
+  // Статус для подсказки в форме: уже в команде / реально зарегистрирован /
+  // приглашали ранее, но не входил / совсем новый. emailVerified=true значит,
+  // что человек хотя бы раз входил (better-auth выставляет его при входе);
+  // placeholder от прошлого приглашения остаётся с emailVerified=false.
+  const inviteStatus = alreadyMember
+    ? ('already' as const)
+    : existing
+      ? existing.emailVerified
+        ? ('registered' as const)
+        : ('pending' as const)
+      : ('new' as const);
+
   const org = await prisma.organization.findUnique({ where: { id: input.organizationId } });
   const member = await prisma.member.upsert({
     where: { userId_organizationId: { userId: target.id, organizationId: input.organizationId } },
@@ -90,7 +102,7 @@ export async function inviteMember(input: { organizationId: string; email: strin
   });
 
   revalidatePath('/admin/members');
-  return member;
+  return { member, status: inviteStatus };
 }
 
 export async function changeMemberRole(input: { memberId: string; role: MemberRole }) {

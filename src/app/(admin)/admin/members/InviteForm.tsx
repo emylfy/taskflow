@@ -31,8 +31,14 @@ export function InviteForm({ organizationId }: { organizationId: string }) {
         try {
           const email = String(fd.get('email') ?? '');
           const role = (String(fd.get('role') ?? 'MEMBER') as MemberRole) ?? 'MEMBER';
-          await inviteMember({ organizationId, email, role });
-          setOk(`Приглашение отправлено на ${email}`);
+          const res = await inviteMember({ organizationId, email, role });
+          const MSG: Record<string, string> = {
+            already: `${email} уже в этой команде — роль обновлена`,
+            registered: `${email} уже зарегистрирован — добавлен в команду`,
+            pending: `${email} приглашали ранее (ещё не входил) — оставлен в команде`,
+            new: `Новый участник ${email} добавлен. Войдёт под этим email (ссылка на почту или Яндекс)`,
+          };
+          setOk(MSG[res.status] ?? `Приглашение отправлено на ${email}`);
           formRef.current?.reset();
         } catch (e) {
           setError((e as Error).message);
