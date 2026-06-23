@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { I } from '@/components/icons/Icons';
 import { Avatar } from '@/components/ui/Avatar';
 import { useMobileNav } from '@/components/nav/MobileNavProvider';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import styles from './TopBar.module.css';
 
 type TopBarProps = {
@@ -74,6 +75,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         Приоритет
       </span>
     ) : null}
+    <ThemeToggle />
     <Link
       href="/notifications"
       className={styles.iconBtn}

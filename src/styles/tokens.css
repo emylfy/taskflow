@@ -1,6 +1,7 @@
-/* TaskFlow design tokens — строго по ТЗ */
+/* TaskFlow design tokens. :root — светлая тема, [data-theme="dark"] — тёмная.
+   Тему задаёт ThemeProvider, проставляя data-theme на <html> (дефолт — dark). */
 :root {
-  color-scheme: light only;
+  color-scheme: light;
   --bg: #FFFFFF;
   --panel: #F7F8FA;
   --border: #E4E6EA;
@@ -36,10 +37,53 @@
   --rt-purple: #7B4FD4;
   --rt-green: #3FA860;
 
+  --selection-bg: #cfdcee;
+  /* Свечение героя/акцентов — в светлой теме мягкое и почти незаметное. */
+  --glow: rgba(43, 95, 164, 0.10);
+
   /* Брейкпоинты адаптива. Это значения-ориентиры: var() нельзя использовать
      в условии @media, поэтому в медиа-запросах подставляются те же литералы.
      lg — планшет-альбом, md — основной переход в «мобильный», sm — телефон. */
   --bp-lg: 1024px;
   --bp-md: 768px;
   --bp-sm: 480px;
+}
+
+/* Тёмная тема — палитра в духе Linear: почти-чёрный фон, приподнятые панели,
+   фиолетово-индиго акцент, мягкое свечение вместо плоских заливок. */
+[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0B0C0E;
+  --panel: #15171A;
+  --border: #23262B;
+  --border-strong: #2E323A;
+  --text: #E6E8EB;
+  --text-2: #9BA1A9;
+  --text-3: #6B7178;
+  --accent: #5E6AD2;
+  --accent-soft: #1E2030;
+  --accent-hover: #6E79E0;
+
+  --s-todo: #8B939C;
+  --s-todo-bg: #1C1F24;
+  --s-doing: #6E8AD6;
+  --s-doing-bg: #161B26;
+  --s-review: #D9B45A;
+  --s-review-bg: #221E12;
+  --s-done: #5BB36A;
+  --s-done-bg: #122017;
+
+  --danger: #E5675B;
+  --danger-bg: #2A1718;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.40);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.55);
+
+  --rt-orange: #F0884A;
+  --rt-purple: #9A72EE;
+  --rt-green: #56C06E;
+
+  --selection-bg: rgba(94, 106, 210, 0.35);
+  --glow: rgba(94, 106, 210, 0.22);
 }

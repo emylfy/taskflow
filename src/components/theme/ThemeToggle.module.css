@@ -1,0 +1,23 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-btn);
+  background: var(--bg);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.btn:hover {
+  background: var(--panel);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.btn svg {
+  display: block;
+}

@@ -12,6 +12,7 @@ import * as Y from 'yjs';
 import { Awareness } from 'y-protocols/awareness';
 import { createYjsSession, type YjsSession } from '@/lib/yjs-provider';
 import { saveYjsSnapshot, restoreVersion } from '@/server/actions/tasks';
+import { useTheme } from '@/components/theme/ThemeProvider';
 import styles from './CollaborativeEditor.module.css';
 
 export type TaskVersion = { id: string; timeLabel: string; summary: string };
@@ -50,6 +51,7 @@ export const CollaborativeEditor: React.FC<Props> = ({
   initialSnapshot,
   versions = [],
 }) => {
+  const { theme } = useTheme();
   const sessionRef = React.useRef<YjsSession | null>(null);
   if (!sessionRef.current && typeof window !== 'undefined') {
     const seed = initialSnapshot ? base64ToBytes(initialSnapshot) : null;
@@ -167,7 +169,7 @@ export const CollaborativeEditor: React.FC<Props> = ({
         </button>
       </div>
       <div className={styles.editor}>
-        <BlockNoteView editor={editor} editable={!readOnly} theme="light" />
+        <BlockNoteView editor={editor} editable={!readOnly} theme={theme} />
       </div>
 
       {versions.length > 0 && (
