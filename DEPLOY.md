@@ -180,9 +180,6 @@ docker compose exec app npm run db:seed
 Открой `https://твой-домен.ru` — должен открыться сайт по защищённому
 соединению с валидным сертификатом (замочек в браузере), без голого IP.
 
-Adminer (просмотр схемы БД для комиссии): `https://твой-домен.ru/db/` —
-логин `admin`, пароль `diploma2026` (Basic Auth).
-
 ---
 
 ## Обновление версии
@@ -211,11 +208,6 @@ docker compose exec db pg_dump -U taskflow taskflow > backup_$(date +%F).sql
 - [ ] `BETTER_AUTH_SECRET` и `POSTGRES_PASSWORD` — не из примера, свои.
 - [ ] HTTPS работает, сертификат валиден.
 - [ ] Решено, что с `DEMO_MODE`: для демонстрации удобнее `true`.
-- [ ] (После защиты) убрать Adminer:
-      `docker compose stop adminer && docker compose rm -f adminer`,
-      затем удалить блок `/db/*` из `Caddyfile` и сервис `adminer` из
-      `docker-compose.yml`. Пароль Adminer (`diploma2026`) задан хешем в
-      `Caddyfile` — поменяй его, если оставляешь Adminer надолго.
 
 ---
 

@@ -44,7 +44,7 @@ services:
 
   caddy:
     image: caddy:2-alpine
-    depends_on: [app, adminer]
+    depends_on: [app]
     environment:
       # домен для автоматического выпуска TLS-сертификата (Let's Encrypt)
       APP_DOMAIN: ${APP_DOMAIN}
@@ -55,18 +55,6 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
       - caddy-config:/config
-    restart: unless-stopped
-
-  # Adminer — веб-интерфейс к PostgreSQL для демонстрации схемы БД
-  # комиссии. Закрыт Basic Auth в Caddy. На время защиты — оставить,
-  # после защиты убрать командой `docker compose stop adminer && docker
-  # compose rm -f adminer`.
-  adminer:
-    image: adminer:4
-    depends_on: [db]
-    environment:
-      ADMINER_DEFAULT_SERVER: db
-      ADMINER_DESIGN: pepa-linha-dark
     restart: unless-stopped
 
 volumes:
