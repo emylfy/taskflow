@@ -1,0 +1,36 @@
+# Render Blueprint для бесплатного демо TaskFlow.
+# Деплой: render.com → New → Blueprint → выбрать этот репозиторий.
+#
+# База данных НЕ в этом блюпринте — используем бесплатный постоянный Postgres
+# от Neon (у Render бесплатный Postgres истекает). DATABASE_URL задаётся вручную
+# в дашборде Render (envVar sync: false). Миграции и демо-данные накатываются
+# один раз локально против Neon (см. README / DEPLOY).
+#
+# Бесплатный web-сервис засыпает после ~15 минут простоя: первая загрузка после
+# сна занимает ~30–60 секунд (холодный старт). Для демо это допустимо.
+services:
+  - type: web
+    name: taskflow
+    runtime: node
+    plan: free
+    region: frankfurt
+    branch: main
+    # tsx/prisma/typescript лежат в devDependencies, а Render ставит зависимости
+    # с NODE_ENV=production (devDeps пропускаются) — поэтому явно --include=dev.
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      # Демо-вход без почты/OAuth (вход готовыми пользователями из сида).
+      - key: DEMO_MODE
+        value: "true"
+      # Render сгенерирует криптостойкое значение сам.
+      - key: BETTER_AUTH_SECRET
+        generateValue: true
+      # Строка подключения к Neon — вставить вручную в дашборде (секрет).
+      - key: DATABASE_URL
+        sync: false
+      # Публичный URL сервиса (https://<имя>.onrender.com) — задать после
+      # первого деплоя, когда адрес известен. Для демо не обязателен.
+      - key: BETTER_AUTH_URL
+        sync: false
