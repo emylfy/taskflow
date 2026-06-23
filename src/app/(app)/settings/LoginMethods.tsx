@@ -11,8 +11,8 @@ const actionBtn: React.CSSProperties = {
   fontWeight: 500,
   padding: '5px 12px',
   borderRadius: 8,
-  border: '1px solid #D8DCE0',
-  background: '#fff',
+  border: '1px solid var(--border-strong)',
+  background: 'var(--bg)',
   color: 'var(--text)',
   cursor: 'pointer',
 };

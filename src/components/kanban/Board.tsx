@@ -154,9 +154,10 @@ export const Board: React.FC<BoardProps> = ({
     const navBtn: React.CSSProperties = {
       minWidth: 32,
       height: 32,
-      border: '1px solid #D8DCE0',
+      border: '1px solid var(--border-strong)',
       borderRadius: 8,
-      background: '#fff',
+      background: 'var(--bg)',
+      color: 'var(--text)',
       cursor: 'pointer',
       fontSize: 15,
       lineHeight: 1,
@@ -174,20 +175,20 @@ export const Board: React.FC<BoardProps> = ({
           <button type="button" style={{ ...navBtn, padding: '0 12px' }}
             onClick={() => { const d = new Date(); setCalMonth(new Date(d.getFullYear(), d.getMonth(), 1)); }}>Сегодня</button>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 1, background: '#E8EAEC', border: '1px solid #E8EAEC', borderRadius: 8, overflow: 'hidden' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 1, background: 'var(--border)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
           {weekdays.map((w) => (
-            <div key={w} style={{ background: '#F7F8FA', padding: '6px 8px', fontSize: 12, fontWeight: 600, color: '#5B6670', textAlign: 'center' }}>{w}</div>
+            <div key={w} style={{ background: 'var(--panel)', padding: '6px 8px', fontSize: 12, fontWeight: 600, color: 'var(--text-2)', textAlign: 'center' }}>{w}</div>
           ))}
           {cells.map((d, i) => {
             const key = ymd(d);
             const inMonth = d.getMonth() === calMonth.getMonth();
             const dayTasks = byDay.get(key) ?? [];
             return (
-              <div key={i} style={{ background: '#fff', minHeight: 92, padding: 6, opacity: inMonth ? 1 : 0.4 }}>
-                <div style={{ fontSize: 12, fontWeight: key === todayKey ? 700 : 500, color: key === todayKey ? '#2B5FA4' : '#1A1D23', marginBottom: 4 }}>{d.getDate()}</div>
+              <div key={i} style={{ background: 'var(--bg)', minHeight: 92, padding: 6, opacity: inMonth ? 1 : 0.4 }}>
+                <div style={{ fontSize: 12, fontWeight: key === todayKey ? 700 : 500, color: key === todayKey ? 'var(--accent)' : 'var(--text)', marginBottom: 4 }}>{d.getDate()}</div>
                 {dayTasks.slice(0, 3).map((t) => (
                   <Link key={t.id} href={`/projects/${projectId}/tasks/${t.id}`}
-                    style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#1A1D23', textDecoration: 'none', padding: '2px 4px', borderRadius: 4, background: '#F2F4F6', marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden' }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text)', textDecoration: 'none', padding: '2px 4px', borderRadius: 4, background: 'var(--panel)', marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden' }}>
                     <span style={{ width: 6, height: 6, borderRadius: 3, background: PRIO_MAP[t.priority].color, flexShrink: 0 }} />
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.title}</span>
                   </Link>
@@ -251,7 +252,7 @@ export const Board: React.FC<BoardProps> = ({
             value={assignee}
             onChange={(e) => setAssignee(e.target.value)}
             aria-label="Фильтр по исполнителю"
-            style={{ padding: '6px 10px', fontSize: 13, border: '1px solid #D8DCE0', borderRadius: 8, background: '#fff', cursor: 'pointer' }}
+            style={{ padding: '6px 10px', fontSize: 13, border: '1px solid var(--border-strong)', borderRadius: 8, background: 'var(--bg)', color: 'var(--text)', cursor: 'pointer' }}
           >
             <option value="all">Исполнитель: все</option>
             {members.map((m) => (
@@ -262,7 +263,7 @@ export const Board: React.FC<BoardProps> = ({
           </select>
           <div style={{ flex: 1 }} />
           <Link href={`/projects/${projectId}/settings`} className={styles.settingsLink}>
-            <I.Settings size={14} stroke="#5B6670" />
+            <I.Settings size={14} stroke="currentColor" />
             Настройки
           </Link>
         </div>

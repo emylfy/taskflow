@@ -48,9 +48,10 @@ const selectStyle: React.CSSProperties = {
   width: '100%',
   padding: '10px 12px',
   fontSize: 14,
-  border: '1px solid #D8DCE0',
+  border: '1px solid var(--border-strong)',
   borderRadius: 8,
-  background: '#fff',
+  background: 'var(--bg)',
+  color: 'var(--text)',
 };
 
 export default async function SettingsPage() {

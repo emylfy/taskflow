@@ -54,9 +54,9 @@ export function AccountDangerZone() {
             fontWeight: 500,
             padding: '8px 14px',
             borderRadius: 8,
-            border: '1px solid #E0A9A9',
-            background: '#fff',
-            color: '#B23A3A',
+            border: '1px solid color-mix(in srgb, var(--danger) 55%, transparent)',
+            background: 'var(--bg)',
+            color: 'var(--danger)',
             cursor: 'pointer',
           }}
         >
