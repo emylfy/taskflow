@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/Button';
 import { Tag } from '@/components/ui/Badge';
 import { AvatarStack } from '@/components/ui/AvatarStack';
 import { PRIO_MAP } from '@/components/ui/Badge';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import { Reveal } from '@/components/landing/Reveal';
 import { FREE_FEATURES, TEAM_FEATURES, BUSINESS_FEATURES } from '@/lib/plan-limits';
 import { getCurrentUser } from '@/lib/session';
 import styles from './landing.module.css';
@@ -110,37 +112,41 @@ export default async function LandingPage() {
           <a href="#business">Для бизнеса</a>
         </nav>
         <div className={styles.spacer} />
-        {isAuthed ? (
-          <Link href="/projects">
-            <Button variant="primary" size="sm">
-              Открыть приложение
-            </Button>
-          </Link>
-        ) : (
-          <>
-            <Link href="/login">
-              <Button variant="ghost" size="sm">
-                Войти
-              </Button>
-            </Link>
-            <div style={{ width: 10 }} />
-            <Link href="/register">
+        <div className={styles.headerActions}>
+          <ThemeToggle />
+          {isAuthed ? (
+            <Link href="/projects">
               <Button variant="primary" size="sm">
-                Начать бесплатно
+                Открыть приложение
               </Button>
             </Link>
-          </>
-        )}
+          ) : (
+            <>
+              <Link href="/login">
+                <Button variant="ghost" size="sm">
+                  Войти
+                </Button>
+              </Link>
+              <Link href="/register">
+                <Button variant="primary" size="sm">
+                  Начать бесплатно
+                </Button>
+              </Link>
+            </>
+          )}
+        </div>
       </header>
 
       <section className={styles.hero}>
+        <div className={styles.heroGlow} aria-hidden />
         <div className={styles.heroBadge}>
           <span className={styles.heroDot} />
           Данные хранятся в РФ · 152-ФЗ
         </div>
         <h1 className={styles.heroTitle}>
           Совместная работа над задачами.<br />
-          <span className={styles.heroTitleMuted}>В реальном времени. В рублях. В России.</span>
+          <span className={styles.heroAccent}>В реальном времени.</span>{' '}
+          <span className={styles.heroTitleMuted}>В рублях. В России.</span>
         </h1>
         <p className={styles.heroText}>
           Веб-приложение для команд с оплатой через ЮKassa и размещением данных в РФ. Канбан, карточки задач,
@@ -173,6 +179,14 @@ export default async function LandingPage() {
             <span /><span /><span />
           </div>
           <div className={styles.board}>
+            <div className={`${styles.cursor} ${styles.cursorA}`} aria-hidden>
+              <I.Cursor size={14} fill="currentColor" stroke="currentColor" className={styles.cursorArrow} />
+              <span className={styles.cursorLabel} style={{ background: 'var(--rt-purple)' }}>Мария</span>
+            </div>
+            <div className={`${styles.cursor} ${styles.cursorB}`} aria-hidden>
+              <I.Cursor size={14} fill="currentColor" stroke="currentColor" className={styles.cursorArrow} />
+              <span className={styles.cursorLabel} style={{ background: 'var(--rt-orange)' }}>Сергей</span>
+            </div>
             {KANBAN_PREVIEW.map((col) => (
               <div key={col.title} className={styles.col}>
                 <div className={styles.colHead}>
@@ -199,6 +213,7 @@ export default async function LandingPage() {
         </div>
       </section>
 
+      <Reveal>
       <section id="features" className={styles.features}>
         {ADVANTAGES.map((a) => (
           <article key={a.title} className={styles.feature}>
@@ -208,7 +223,9 @@ export default async function LandingPage() {
           </article>
         ))}
       </section>
+      </Reveal>
 
+      <Reveal>
       <section id="security" className={styles.security}>
         <div className={styles.sectionHead}>
           <h2>Безопасность и соответствие 152-ФЗ</h2>
@@ -229,7 +246,9 @@ export default async function LandingPage() {
           ))}
         </div>
       </section>
+      </Reveal>
 
+      <Reveal>
       <section id="business" className={styles.business}>
         <div className={styles.businessCard}>
           <div className={styles.businessInfo}>
@@ -256,7 +275,9 @@ export default async function LandingPage() {
           </div>
         </div>
       </section>
+      </Reveal>
 
+      <Reveal>
       <section id="pricing" className={styles.pricing}>
         <div className={styles.pricingHead}>
           <h2>Прозрачные тарифы</h2>
@@ -289,6 +310,7 @@ export default async function LandingPage() {
           ))}
         </div>
       </section>
+      </Reveal>
 
       <footer className={styles.footer}>
         <div className={styles.footerInner}>

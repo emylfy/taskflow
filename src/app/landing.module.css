@@ -1,109 +1,187 @@
 .page {
+  position: relative;
   min-height: 100vh;
   background: var(--bg);
+  overflow: hidden;
 }
 
+/* ===== Шапка ===== */
 .header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
   display: flex;
   align-items: center;
-  padding: 20px 64px;
+  padding: 16px 64px;
   border-bottom: 1px solid var(--border);
-  background: var(--bg);
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  backdrop-filter: saturate(160%) blur(12px);
+  -webkit-backdrop-filter: saturate(160%) blur(12px);
 }
 
 .nav {
   display: flex;
   gap: 28px;
-  margin-left: 60px;
+  margin-left: 56px;
   font-size: 14px;
-  color: var(--text);
+  color: var(--text-2);
 }
 
 .nav a {
   color: inherit;
   text-decoration: none;
+  transition: color 140ms ease;
+}
+
+.nav a:hover {
+  color: var(--text);
 }
 
 .spacer { flex: 1; }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ===== Герой ===== */
 .hero {
-  padding: 64px 64px 0;
+  position: relative;
+  z-index: 1;
+  padding: 96px 64px 0;
   text-align: center;
   max-width: 1100px;
   margin: 0 auto;
+}
+
+/* Мягкое фиолетово-синее свечение за героем — главный «премиум»-акцент. */
+.heroGlow {
+  position: absolute;
+  inset: -200px 0 auto 0;
+  height: 720px;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    radial-gradient(620px 360px at 50% 8%, var(--glow), transparent 70%),
+    radial-gradient(420px 280px at 78% 24%, color-mix(in srgb, var(--accent) 26%, transparent), transparent 72%),
+    radial-gradient(420px 280px at 22% 26%, color-mix(in srgb, var(--rt-purple) 22%, transparent), transparent 72%);
+  filter: blur(8px);
 }
 
 .heroBadge {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
-  background: var(--accent-soft);
-  color: var(--accent);
+  padding: 6px 13px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text-2);
   border-radius: 999px;
   font-size: 12px;
   font-weight: 500;
-  margin-bottom: 22px;
+  margin-bottom: 24px;
+  animation: fadeUp 700ms both;
 }
 
 .heroDot {
   width: 6px; height: 6px; border-radius: 50%;
-  background: var(--accent);
+  background: var(--s-done);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--s-done) 70%, transparent);
+  animation: pulse 2.4s ease-out infinite;
 }
 
 .heroTitle {
-  font-size: clamp(30px, 6vw, 54px);
-  line-height: 1.08;
-  font-weight: 700;
-  letter-spacing: -1.2px;
-  margin: 0 0 18px;
+  font-size: clamp(34px, 6.4vw, 62px);
+  line-height: 1.05;
+  font-weight: 720;
+  letter-spacing: -1.6px;
+  margin: 0 0 20px;
+  animation: fadeUp 700ms both;
+  animation-delay: 60ms;
 }
 
 .heroTitleMuted {
   color: var(--text-2);
 }
 
+/* Акцентная часть заголовка — градиентный текст. */
+.heroAccent {
+  background: linear-gradient(
+    100deg,
+    var(--accent) 0%,
+    color-mix(in srgb, var(--accent) 60%, var(--rt-purple)) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 .heroText {
   font-size: 17px;
   color: var(--text-2);
-  margin: 0 auto 30px;
+  margin: 0 auto 32px;
   max-width: 640px;
-  line-height: 1.55;
+  line-height: 1.6;
+  animation: fadeUp 700ms both;
+  animation-delay: 120ms;
 }
 
 .heroCta {
   display: flex;
   gap: 12px;
   justify-content: center;
+  animation: fadeUp 700ms both;
+  animation-delay: 180ms;
 }
 
 .heroNote {
   font-size: 12px;
   color: var(--text-3);
-  margin-top: 14px;
+  margin-top: 16px;
+  animation: fadeUp 700ms both;
+  animation-delay: 240ms;
 }
 
+/* ===== Превью приложения ===== */
 .previewWrap {
-  margin-top: 44px;
+  position: relative;
+  z-index: 1;
+  margin-top: 56px;
   padding: 0 40px;
+  animation: fadeUp 900ms both;
+  animation-delay: 300ms;
 }
 
 .laptop {
+  position: relative;
   max-width: 1040px;
   margin: 0 auto;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: 0 18px 50px rgba(16, 24, 40, 0.12);
+  background: var(--panel);
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  box-shadow: var(--shadow-lg), 0 0 0 1px color-mix(in srgb, var(--accent) 14%, transparent);
   overflow: hidden;
+}
+
+/* Свечение под окном приложения. */
+.laptop::before {
+  content: '';
+  position: absolute;
+  inset: auto 12% -30px 12%;
+  height: 80px;
+  background: radial-gradient(60% 100% at 50% 0%, var(--glow), transparent 75%);
+  filter: blur(16px);
+  pointer-events: none;
 }
 
 .laptopTop {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   padding: 12px 14px;
   border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--panel) 60%, var(--bg));
 }
 
 .laptopTop span {
@@ -112,12 +190,12 @@
 }
 
 .board {
-  background: var(--panel);
-  border-radius: 0;
-  height: 360px;
+  position: relative;
+  background: var(--bg);
+  height: 372px;
   display: flex;
   gap: 10px;
-  padding: 14px;
+  padding: 16px;
   overflow: hidden;
 }
 
@@ -130,7 +208,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 0 2px 8px;
+  padding: 0 2px 10px;
 }
 
 .colDot {
@@ -140,6 +218,7 @@
 .colTitle {
   font-size: 12px;
   font-weight: 600;
+  color: var(--text);
 }
 
 .colCount {
@@ -150,42 +229,88 @@
 .cards {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .card {
   position: relative;
-  background: var(--bg);
+  background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 8px 10px;
+  border-radius: 8px;
+  padding: 9px 11px;
+  transition: border-color 140ms ease, transform 140ms ease;
+}
+
+.card:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
 }
 
 .cardBar {
   position: absolute;
   left: 0; top: 8px; bottom: 8px;
-  width: 2px;
+  width: 2.5px;
   border-radius: 2px;
 }
 
 .cardText {
   font-size: 11px;
   font-weight: 500;
-  line-height: 1.3;
-  padding-left: 4px;
+  line-height: 1.35;
+  padding-left: 5px;
+  color: var(--text);
 }
 
 .cardRow {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-top: 6px;
-  padding-left: 4px;
+  margin-top: 8px;
+  padding-left: 5px;
 }
 
+/* Живые курсоры — демонстрация realtime-коллаборации. Чистый CSS-дрейф. */
+.cursor {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  pointer-events: none;
+  z-index: 3;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
+}
 
+.cursorArrow {
+  width: 14px;
+  height: 14px;
+}
+
+.cursorLabel {
+  font-size: 10px;
+  font-weight: 600;
+  color: #fff;
+  padding: 2px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.cursorA {
+  top: 26%; left: 30%;
+  color: var(--rt-purple);
+  animation: driftA 9s ease-in-out infinite;
+}
+
+.cursorB {
+  top: 58%; left: 64%;
+  color: var(--rt-orange);
+  animation: driftB 11s ease-in-out infinite;
+}
+
+/* ===== Возможности ===== */
 .features {
-  padding: 64px 64px;
+  position: relative;
+  z-index: 1;
+  padding: 88px 64px 40px;
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 20px;
@@ -194,50 +319,101 @@
 }
 
 .feature {
-  padding: 24px;
+  padding: 26px;
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--r-card);
+  transition: border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.feature:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
 }
 
 .featureIcon {
-  width: 42px; height: 42px;
-  border-radius: 8px;
-  background: var(--bg);
-  border: 1px solid var(--border);
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
   display: flex; align-items: center; justify-content: center;
   color: var(--accent);
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
 .featureTitle {
   font-size: 16px;
   font-weight: 600;
-  margin-bottom: 6px;
+  margin-bottom: 7px;
+  color: var(--text);
 }
 
 .featureDesc {
   font-size: 13px;
   color: var(--text-2);
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
+/* ===== Безопасность ===== */
+.security {
+  position: relative;
+  z-index: 1;
+  padding: 64px 64px 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.sectionHead {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.sectionHead h2 {
+  font-size: clamp(26px, 4vw, 34px);
+  font-weight: 700;
+  margin: 0 0 10px;
+  letter-spacing: -0.8px;
+}
+
+.sectionHead p {
+  color: var(--text-2);
+  font-size: 15px;
+  margin: 0 auto;
+  max-width: 620px;
+}
+
+.securityGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .securityGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ===== Тарифы ===== */
 .pricing {
-  padding: 80px 64px 40px;
+  position: relative;
+  z-index: 1;
+  padding: 64px 64px 40px;
   max-width: 1100px;
   margin: 0 auto;
 }
 
 .pricingHead {
   text-align: center;
-  margin-bottom: 36px;
+  margin-bottom: 40px;
 }
 
 .pricingHead h2 {
-  font-size: 32px;
+  font-size: clamp(26px, 4vw, 34px);
   font-weight: 700;
-  margin: 0 0 8px;
-  letter-spacing: -0.6px;
+  margin: 0 0 10px;
+  letter-spacing: -0.8px;
 }
 
 .pricingHead div {
@@ -253,23 +429,28 @@
 
 .plan {
   position: relative;
-  padding: 24px;
-  background: var(--bg);
+  padding: 26px;
+  background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--r-card);
-  box-shadow: var(--shadow-sm);
+  transition: border-color 160ms ease, transform 160ms ease;
+}
+
+.plan:hover {
+  transform: translateY(-3px);
+  border-color: var(--border-strong);
 }
 
 .planFeatured {
-  border-color: var(--accent);
-  box-shadow: 0 12px 32px rgba(43, 95, 164, 0.12);
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  box-shadow: 0 16px 44px color-mix(in srgb, var(--accent) 22%, transparent);
 }
 
 .planBadge {
   position: absolute;
   top: -10px;
-  left: 20px;
-  padding: 3px 10px;
+  left: 24px;
+  padding: 3px 11px;
   background: var(--accent);
   color: #fff;
   font-size: 11px;
@@ -281,20 +462,21 @@
   font-size: 15px;
   font-weight: 600;
   color: var(--text-2);
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .planPrice {
   display: flex;
   align-items: baseline;
   gap: 6px;
-  margin-bottom: 20px;
+  margin-bottom: 22px;
 }
 
 .planPriceValue {
-  font-size: 36px;
+  font-size: 38px;
   font-weight: 700;
-  letter-spacing: -1px;
+  letter-spacing: -1.2px;
+  color: var(--text);
 }
 
 .planPriceSuffix {
@@ -305,7 +487,7 @@
 .planSep {
   height: 1px;
   background: var(--border);
-  margin: 20px 0;
+  margin: 22px 0;
 }
 
 .planFeatures {
@@ -314,7 +496,7 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 11px;
 }
 
 .planFeatures li {
@@ -324,59 +506,28 @@
   color: var(--text);
 }
 
-.security {
-  padding: 80px 64px 40px;
-  max-width: 1200px;
-  margin: 0 auto;
-  background: var(--bg);
-}
-
-.sectionHead {
-  text-align: center;
-  margin-bottom: 36px;
-}
-
-.sectionHead h2 {
-  font-size: 32px;
-  font-weight: 700;
-  margin: 0 0 8px;
-  letter-spacing: -0.6px;
-}
-
-.sectionHead p {
-  color: var(--text-2);
-  font-size: 15px;
-  margin: 0;
-  max-width: 640px;
-  margin: 0 auto;
-}
-
-.securityGrid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-
-@media (max-width: 900px) {
-  .securityGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
+/* ===== Для бизнеса ===== */
 .business {
-  padding: 40px 64px 80px;
+  position: relative;
+  z-index: 1;
+  padding: 40px 64px 88px;
   max-width: 1200px;
   margin: 0 auto;
 }
 
 .businessCard {
-  background: linear-gradient(135deg, #1A1D23 0%, #2B5FA4 100%);
-  border-radius: 16px;
-  padding: 64px 72px;
-  color: #fff;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 24px 64px rgba(43, 95, 164, 0.25);
+  border-radius: 18px;
+  padding: 64px 72px;
+  color: #fff;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent) 88%, #000) 0%,
+    var(--rt-purple) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
+  box-shadow: 0 28px 70px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 .businessCard::before {
@@ -384,10 +535,10 @@
   position: absolute;
   top: -20%;
   right: -10%;
-  width: 420px;
-  height: 420px;
+  width: 460px;
+  height: 460px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -409,9 +560,9 @@
 }
 
 .businessInfo h2 {
-  font-size: 36px;
+  font-size: clamp(28px, 4vw, 38px);
   font-weight: 700;
-  letter-spacing: -0.8px;
+  letter-spacing: -1px;
   margin: 0 0 14px;
   color: #fff;
 }
@@ -419,7 +570,7 @@
 .businessInfo p {
   font-size: 16px;
   line-height: 1.6;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.86);
   margin: 0 0 24px;
 }
 
@@ -436,7 +587,7 @@
   display: flex;
   gap: 10px;
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.92);
+  color: rgba(255, 255, 255, 0.94);
   align-items: center;
 }
 
@@ -454,18 +605,18 @@
   .businessCard {
     padding: 40px 28px;
   }
-  .businessInfo h2 {
-    font-size: 28px;
-  }
   .businessList {
     grid-template-columns: 1fr;
   }
 }
 
+/* ===== Подвал ===== */
 .footer {
+  position: relative;
+  z-index: 1;
   border-top: 1px solid var(--border);
   background: var(--panel);
-  padding: 22px 64px;
+  padding: 24px 64px;
   font-size: 13px;
   color: var(--text-2);
 }
@@ -538,76 +689,87 @@
   }
 }
 
-/* ===== Адаптив лендинга ===== */
-/* Декоративный мок-канбан в hero: при сужении уменьшаем число видимых колонок
-   (4→3→2→1), чтобы оставшиеся были широкими и карточки не обрезались/не
-   наслаивались. Колонки flex:1 делят ширину поровну, лишние скрываем. */
+/* ===== Анимации ===== */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--s-done) 60%, transparent); }
+  70% { box-shadow: 0 0 0 7px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+@keyframes driftA {
+  0%, 100% { transform: translate(0, 0); }
+  30% { transform: translate(70px, 26px); }
+  60% { transform: translate(20px, 80px); }
+}
+
+@keyframes driftB {
+  0%, 100% { transform: translate(0, 0); }
+  35% { transform: translate(-60px, -34px); }
+  70% { transform: translate(-24px, 30px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heroBadge, .heroTitle, .heroText, .heroCta, .heroNote, .previewWrap,
+  .heroDot, .cursorA, .cursorB {
+    animation: none;
+  }
+}
+
+/* ===== Адаптив ===== */
 @media (max-width: 1024px) {
   .previewWrap {
     padding: 0 24px;
   }
-
   .board .col:nth-child(4) {
     display: none;
   }
+  .cursorB { display: none; }
 }
 
 @media (max-width: 768px) {
   .header {
-    padding: 14px 16px;
+    padding: 12px 16px;
   }
-
-  /* Якорные ссылки прячем, остаются лого и кнопки входа/регистрации. */
   .nav {
     display: none;
   }
-
   .hero {
-    padding: 40px 20px 0;
+    padding: 56px 20px 0;
   }
-
   .heroText {
     font-size: 15px;
   }
-
   .previewWrap {
     padding: 0 16px;
-    margin-top: 32px;
+    margin-top: 36px;
   }
-
   .board {
     height: 320px;
     gap: 8px;
     padding: 12px;
   }
-
-  /* Две широкие колонки превью. */
   .board .col:nth-child(n + 3) {
     display: none;
   }
-
+  .cursorA { display: none; }
   .features {
-    padding: 40px 20px;
+    padding: 56px 20px 32px;
     grid-template-columns: 1fr;
   }
-
   .pricing {
     padding: 48px 20px 32px;
   }
-
-  .pricingHead h2,
-  .sectionHead h2 {
-    font-size: 26px;
-  }
-
   .plans {
     grid-template-columns: 1fr;
   }
-
   .security {
     padding: 48px 20px 32px;
   }
-
   .business {
     padding: 32px 20px 56px;
   }
@@ -617,16 +779,12 @@
   .heroCta {
     flex-direction: column;
   }
-
-  /* Телефон: одна полноширинная колонка превью — без сжатия и наложений. */
   .board {
     height: 280px;
   }
-
   .board .col:nth-child(n + 2) {
     display: none;
   }
-
   .securityGrid {
     grid-template-columns: 1fr;
   }
