@@ -120,7 +120,7 @@ docker --version && docker compose version
 
 ```bash
 cd /opt
-git clone https://github.com/emylfy/taskflow-diploma.git taskflow
+git clone https://github.com/emylfy/taskflow.git taskflow
 cd taskflow
 cp .env.example .env
 nano .env

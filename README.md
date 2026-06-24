@@ -1,74 +1,78 @@
 # TaskFlow
 
-Веб-приложение для управления задачами и совместной работы команд. Дипломный проект по специальности 09.02.07 «Информационные системы и программирование».
+A task management and team collaboration web app: projects, kanban boards, task cards, comments with @mentions, project chat, and real-time collaborative editing of task descriptions.
+
+> Русская версия — [README.ru.md](README.ru.md)
 
 ---
 
-## Содержание
+## Contents
 
-1. [Что это](#что-это)
-2. [Стек](#стек)
-3. [Архитектура](#архитектура)
-4. [Быстрый старт](#быстрый-старт)
-5. [Переменные окружения](#переменные-окружения)
-6. [База данных](#база-данных)
-7. [Разработка](#разработка)
-8. [Production-сборка](#production-сборка)
-9. [Развёртывание на VPS](#развёртывание-на-vps)
-10. [Что настраивает пользователь](#что-настраивает-пользователь)
-11. [Проверочный лист](#проверочный-лист)
-12. [Частые проблемы](#частые-проблемы)
-13. [Структура проекта](#структура-проекта)
-14. [Команды npm](#команды-npm)
-
----
-
-## Что это
-
-TaskFlow — закрытое пространство для команды: проекты, канбан-доски, карточки задач, комментарии с упоминаниями, чат проекта и совместное редактирование описаний в реальном времени. Данные хранятся в России, оплата — в рублях через ЮKassa. Соответствие 152-ФЗ.
-
-**Реализовано в репозитории:**
-
-- Вход через **Яндекс ID** (OAuth) и **одноразовую ссылку на почту** (magic link).
-- Регистрация организации и приглашение участников (OWNER / ADMIN / MEMBER).
-- **Канбан-доска** на `@dnd-kit` с optimistic UI и сохранением в PostgreSQL через транзакцию.
-- **Совместное редактирование описания** задачи: BlockNote + Yjs через WebSocket (`/api/collaboration/task-<id>`), живые курсоры, автосохранение снимков CRDT каждые 3 секунды.
-- **Комментарии** с `@`-упоминаниями и серверным созданием уведомлений.
-- **Чат проекта** с каналами (заготовка, сообщения пока не персистятся — оставлено как расширение).
-- **Панель администратора** — метрики, журнал действий, участники, подписка.
-- **ЮKassa**: создание платежа, редирект на форму оплаты, обработка вебхука с HMAC-подписью и идемпотентностью.
-- **Docker Compose** (приложение + PostgreSQL 16 + Caddy), **GitHub Actions** (сборка и SSH-деплой), **резервное копирование** через `pg_dump`.
+1. [What it is](#what-it-is)
+2. [Stack](#stack)
+3. [Architecture](#architecture)
+4. [Quick start](#quick-start)
+5. [Environment variables](#environment-variables)
+6. [Database](#database)
+7. [Development](#development)
+8. [Production build](#production-build)
+9. [Deployment](#deployment)
+10. [Verification checklist](#verification-checklist)
+11. [Troubleshooting](#troubleshooting)
+12. [Project structure](#project-structure)
+13. [npm commands](#npm-commands)
 
 ---
 
-## Стек
+## What it is
 
-| Слой | Технологии |
+TaskFlow is a private workspace for a team: organizations, projects, kanban boards, task cards, comments, project chat, and real-time collaborative editing.
+
+**Implemented:**
+
+- Sign in via **Yandex ID** (OAuth) and a **one-time email magic link**.
+- Organization registration and member invitations with roles (OWNER / ADMIN / MEMBER).
+- **Kanban board** on `@dnd-kit` with optimistic UI and persistence to PostgreSQL in a transaction.
+- **Calendar view** of tasks by due date.
+- **Collaborative editing** of a task description: BlockNote + Yjs over WebSocket (`/api/collaboration/task-<id>`), live cursors, CRDT snapshots autosaved on a debounce.
+- **Version history** with rollback, Markdown export, and an offline IndexedDB cache.
+- **Comments** with `@mentions` and server-side notification + email delivery.
+- **Project chat** and due-date reminders.
+- **Admin area** — metrics, audit log with CSV export, members, subscription.
+- **Plans & billing** — per-plan limits and feature flags, **YuKassa** payments (create payment, redirect to the payment form, webhook verified against the YuKassa API).
+- **Dark theme** with a toggle (dark by default).
+- **Docker Compose** (app + PostgreSQL 16 + Caddy with automatic HTTPS) and a database backup script (`pg_dump`).
+
+---
+
+## Stack
+
+| Layer | Technologies |
 | --- | --- |
-| Фронтенд | Next.js 15 (App Router) + React 19, TypeScript, CSS Modules |
-| Дизайн-система | собственная (`src/components/ui/*`), дизайн-токены в `src/styles/tokens.css` — **без** Tailwind, shadcn/ui, Radix, lucide-react |
-| Бэкенд | Server Actions Next.js, custom `server.ts` с WebSocket upgrade |
-| База данных | PostgreSQL 16 + Prisma ORM |
-| Авторизация | BetterAuth (Prisma adapter, magic link, generic OAuth для Яндекс ID) |
-| Совместное редактирование | BlockNote 0.27 + Yjs 13 + y-websocket |
+| Frontend | Next.js 15 (App Router) + React 19, TypeScript, CSS Modules |
+| Design system | custom (`src/components/ui/*`), design tokens in `src/styles/tokens.css` — **no** Tailwind, shadcn/ui, Radix or lucide-react |
+| Backend | Next.js Server Actions, custom `server.ts` with a WebSocket upgrade |
+| Database | PostgreSQL 16 + Prisma ORM (15 models) |
+| Auth | BetterAuth (Prisma adapter, magic link, generic OAuth for Yandex ID) |
+| Collaborative editing | BlockNote 0.27 + Yjs 13 + y-websocket |
 | Drag-and-drop | @dnd-kit (core, sortable, utilities) |
-| Платежи | ЮKassa HTTP API |
-| Инфраструктура | Docker Compose, Caddy 2 (авто-HTTPS через Let's Encrypt), GitHub Actions |
+| Payments | YuKassa HTTP API |
+| Infrastructure | Docker Compose, Caddy 2 (auto-HTTPS via Let's Encrypt) |
 
 ---
 
-## Архитектура
+## Architecture
 
 ```
            ┌────────────────┐
- браузер ─►│     Caddy      │── 443 → проксирование → app:3000
-           │   (HTTPS)      │
+ browser ─►│     Caddy      │── 443 → reverse proxy → app:3000
+           │    (HTTPS)     │
            └────────────────┘
                    │
                    ▼
            ┌────────────────┐
-           │  Next.js app   │   ── HTTP маршруты (страницы, API, auth)
-           │  server.ts     │   ── WebSocket upgrade /api/collaboration/*
+           │  Next.js app   │   ── HTTP routes (pages, API, auth)
+           │   server.ts    │   ── WebSocket upgrade /api/collaboration/*
            └────┬──────┬────┘
                 │      │
        SQL ─────┘      └───── WebSocket (Yjs broadcast)
@@ -79,401 +83,277 @@ TaskFlow — закрытое пространство для команды: п
          └────────────┘
 ```
 
-Ключевые решения:
+Key decisions:
 
-- **Custom server** ([`server.ts`](server.ts)) нужен, чтобы на одном порту одновременно держать обычный Next.js и y-websocket без отдельного процесса.
-- **Server Actions** вместо REST: вся мутация данных идёт через `src/server/actions/*`, права проверяются через таблицу `Member`.
-- **Yjs как источник истины для описаний задач**, а `Task.description` в Prisma остаётся короткой аннотацией; полное тело хранится бинарным снимком в `YjsSnapshot` и обновляется с debounce 3 с.
-- **Идемпотентность платежей** обеспечивается уникальным индексом `Payment.providerId` и проверкой статуса в вебхуке.
+- A **custom server** ([`server.ts`](server.ts)) hosts both the regular Next.js app and y-websocket. In development collab runs on a separate port (PORT+1); in production it shares the port with Next.
+- **Server Actions** instead of REST: all data mutations go through `src/server/actions/*`, with permissions checked against the `Member` table.
+- **Yjs is the source of truth for task descriptions**, while `Task.description` in Prisma stays a short annotation; the full body is stored as a binary snapshot in `YjsSnapshot` and updated with a debounce.
+- **Payment idempotency** is enforced by a unique index on `Payment.providerId` and a status check in the webhook.
 
 ---
 
-## Быстрый старт
+## Quick start
 
-### Предварительные требования
+### Prerequisites
 
-- **Node.js 22+** (проверено на 22 и 25).
-- **Docker Desktop** (для PostgreSQL и/или полного стека).
-- macOS, Linux или WSL2.
+- **Node.js 22+** (tested on 22 and 25).
+- **Docker** (for PostgreSQL and/or the full stack).
+- macOS, Linux or WSL2.
 
-### Шаги
+### Steps
 
 ```bash
-# 1. Перейти в папку проекта
+# 1. Enter the project folder
 cd taskflow
 
-# 2. Установить зависимости (~40 секунд)
+# 2. Install dependencies (~40s)
 npm install
 
-# 3. Скопировать шаблон окружения и заполнить значения
+# 3. Copy the env template and fill in the values
 cp .env.example .env
-#   Обязательно: DATABASE_URL, BETTER_AUTH_SECRET
-#   Для полной функциональности: Яндекс ID, ЮKassa, SMTP
+#   Required: DATABASE_URL, BETTER_AUTH_SECRET
+#   For full functionality: Yandex ID, YuKassa, SMTP
 
-# 4. Поднять PostgreSQL в Docker
+# 4. Start PostgreSQL in Docker
 docker compose up -d db
 
-# 5. Применить миграции и наполнить демо-данными
+# 5. Apply migrations and load demo data
 npx prisma migrate dev --name init
 npm run db:seed
 
-# 6. Запустить в режиме разработки
+# 6. Run in development mode
 npm run dev
 ```
 
-Приложение — на <http://localhost:3000>.
+The app is at <http://localhost:3000>.
 
 ---
 
-## Переменные окружения
+## Environment variables
 
-Все параметры — в `.env`. Файл **не коммитится** (см. `.gitignore`).
+All settings live in `.env`. The file is **not committed** (see `.gitignore`).
 
-### Обязательные
+### Required
 
-| Переменная | Назначение |
+| Variable | Purpose |
 | --- | --- |
-| `DATABASE_URL` | Строка подключения к PostgreSQL, например `postgresql://taskflow:password@localhost:5432/taskflow` |
-| `BETTER_AUTH_SECRET` | Секрет для подписи сессий, **не менее 32 символов**. Сгенерировать: `openssl rand -base64 32` |
-| `BETTER_AUTH_URL` | Полный URL приложения. Локально — `http://localhost:3000`, в production — `https://taskflow.ru` |
+| `DATABASE_URL` | PostgreSQL connection string, e.g. `postgresql://taskflow:password@localhost:5432/taskflow` |
+| `BETTER_AUTH_SECRET` | Session signing secret, **at least 32 characters**. Generate: `openssl rand -base64 32` |
+| `BETTER_AUTH_URL` | Full app URL. Local: `http://localhost:3000`; production: `https://your-domain` |
+| `NEXT_PUBLIC_BETTER_AUTH_URL` | Same URL exposed to the browser (used by the auth client for OAuth and magic link) |
 
-### Яндекс ID (для входа через Яндекс)
+### Yandex ID (sign in with Yandex)
 
-| Переменная | Где получить |
+| Variable | Where to get it |
 | --- | --- |
-| `YANDEX_CLIENT_ID` | [oauth.yandex.ru](https://oauth.yandex.ru/client/new) → создать приложение → Client ID |
-| `YANDEX_CLIENT_SECRET` | Там же — Client Secret |
+| `YANDEX_CLIENT_ID` | [oauth.yandex.ru](https://oauth.yandex.ru/client/new) → create an app → Client ID |
+| `YANDEX_CLIENT_SECRET` | same place — Client Secret |
 
-**В настройках OAuth-приложения Яндекс** укажите redirect URI: `https://<ваш-домен>/api/auth/callback/yandex` (для локальной разработки — `http://localhost:3000/api/auth/callback/yandex`). Требуемые права: `login:email`, `login:info`.
+In the Yandex OAuth app set the redirect URI: `https://<your-domain>/api/auth/callback/yandex` (locally `http://localhost:3000/api/auth/callback/yandex`). Required scopes: `login:email`, `login:info`.
 
-### SMTP (для magic link по почте)
+### SMTP (email magic link)
 
-| Переменная | Пример |
+| Variable | Example |
 | --- | --- |
-| `SMTP_HOST` | `smtp.yandex.ru` |
+| `SMTP_HOST` | `smtp.example.com` |
 | `SMTP_PORT` | `465` |
-| `SMTP_USER` | `noreply@вашдомен.ru` |
-| `SMTP_PASSWORD` | Пароль приложения (в Яндекс.Почте — в «Пароли для сторонних приложений») |
+| `SMTP_USER` | `noreply@your-domain` |
+| `SMTP_PASSWORD` | App password (not the account password) |
 
-### ЮKassa (для оплаты подписок)
+Without SMTP the magic link is printed to the console instead of being emailed.
 
-| Переменная | Где взять |
+### YuKassa (subscription payments)
+
+| Variable | Where to get it |
 | --- | --- |
-| `YOOKASSA_SHOP_ID` | Личный кабинет ЮKassa → Настройки → API |
-| `YOOKASSA_SECRET_KEY` | Там же, «Секретный ключ» |
-| `YOOKASSA_WEBHOOK_SECRET` | Сгенерируйте сами (`openssl rand -hex 32`) и укажите в настройках вебхука ЮKassa |
+| `YOOKASSA_SHOP_ID` | YuKassa dashboard → Settings → API |
+| `YOOKASSA_SECRET_KEY` | same place, "Secret key" |
+| `YOOKASSA_WEBHOOK_SECRET` | generate your own (`openssl rand -hex 32`) and set it in the YuKassa webhook settings |
 
-**URL вебхука для ЮKassa:** `https://<ваш-домен>/api/webhooks/yookassa`. События: `payment.succeeded`, `payment.canceled`.
+Webhook URL: `https://<your-domain>/api/webhooks/yookassa`. Events: `payment.succeeded`, `payment.canceled`.
 
-### PostgreSQL (для docker-compose)
+### PostgreSQL (for docker-compose)
 
-| Переменная | По умолчанию |
+| Variable | Default |
 | --- | --- |
 | `POSTGRES_USER` | `taskflow` |
-| `POSTGRES_PASSWORD` | **поменяйте** на сильный пароль |
+| `POSTGRES_PASSWORD` | **change** to a strong password |
 | `POSTGRES_DB` | `taskflow` |
 
-Согласуйте значения с `DATABASE_URL` — иначе приложение не подключится к базе.
+Keep these in sync with `DATABASE_URL` or the app won't connect.
+
+### Optional
+
+| Variable | Purpose | Default |
+| --- | --- | --- |
+| `APP_DOMAIN` | Domain (without `https://`) for Caddy TLS | `taskflow.ru` |
+| `NEXT_PUBLIC_COLLAB_URL` | WebSocket collab server (leave empty to proxy through the app) | empty |
+| `DEMO_MODE` | Quick login with demo users (no email/OAuth) | `true` |
+| `SEED_OWNER_EMAIL` / `SEED_OWNER_NAME` | Owner identity for the seeded workspace | demo user |
+| `NPM_REGISTRY` / `PRISMA_ENGINES_MIRROR` | Registry mirrors for builds on restricted networks | official registries |
 
 ---
 
-## База данных
+## Database
 
-### Первичная инициализация
-
-```bash
-docker compose up -d db              # поднять PostgreSQL
-npx prisma migrate dev --name init   # создать схему (15 моделей)
-npm run db:seed                      # загрузить демо-данные
-```
-
-**Демо-данные** (скрипт `prisma/seed.ts`):
-- Организация «Команда TaskFlow»
-- 5 пользователей: Иван Соколов (владелец), Мария Петрова (администратор), Сергей Николаев, Елена Куликова, Тимур Белов
-- 3 проекта: «Редизайн сайта», «Запуск мобильного приложения», «Маркетинговая кампания Q2 2026»
-- 15 задач с разными статусами и приоритетами
-- 3 тарифа (Бесплатный, Команда, Бизнес) и активная подписка
-
-### Повторный запуск
+### Initial setup
 
 ```bash
-npm run db:seed     # очищает и пересоздаёт демо-данные
-npm run db:studio   # веб-просмотрщик Prisma Studio (http://localhost:5555)
+docker compose up -d db              # start PostgreSQL
+npx prisma migrate dev --name init   # create the schema (15 models)
+npm run db:seed                      # load demo data
 ```
 
-### Изменение схемы
+**Demo data** (`prisma/seed.ts`): one organization, 5 users (configurable via `SEED_OWNER_EMAIL`/`SEED_OWNER_NAME`), 3 projects, 15 tasks with varied statuses and priorities, and 3 plans (Free, Team, Business) with an active subscription.
 
-1. Отредактируйте `prisma/schema.prisma`.
-2. `npx prisma migrate dev --name <короткое-описание>`.
-3. Prisma создаст миграцию в `prisma/migrations/` и применит её к dev-базе.
-
-### Production-миграция
+### Re-run / inspect
 
 ```bash
-npx prisma migrate deploy
+npm run db:seed     # wipes and recreates demo data
+npm run db:studio   # Prisma Studio at http://localhost:5555
 ```
+
+### Changing the schema
+
+1. Edit `prisma/schema.prisma`.
+2. `npx prisma migrate dev --name <short-description>`.
+3. Prisma creates a migration in `prisma/migrations/` and applies it to the dev DB.
+
+Production: `npx prisma migrate deploy`.
 
 ---
 
-## Разработка
+## Development
 
 ```bash
 npm run dev
 ```
 
-- Запускает `tsx server.ts` — custom Next.js с WebSocket на `:3000`.
-- Hot reload работает для всего: TSX, CSS, серверных действий.
-- Яндекс ID в dev-режиме работает, если указаны `YANDEX_CLIENT_ID/SECRET` и redirect URI `http://localhost:3000/api/auth/callback/yandex`.
-- Magic link в dev-режиме без SMTP **не отправит письмо**, но ошибки подключения видны в консоли — можно временно поставить Mailhog или логгер.
+- Runs `tsx server.ts` — a custom Next.js server with WebSocket on `:3000`.
+- Hot reload works for everything: TSX, CSS, server actions.
+- Yandex ID works in dev when `YANDEX_CLIENT_ID/SECRET` and the redirect URI are set.
+- Without SMTP the magic link is logged to the console instead of emailed.
 
-### Проверка совместного редактирования локально
+### Testing collaborative editing locally
 
-1. Откройте одну и ту же задачу в двух окнах браузера (например, Chrome + Firefox).
-2. Начните печатать в одном — изменения появятся во втором в течение ~100 мс.
-3. Курсоры других участников отрисовываются с именем и цветом (палитра `tokens.css → --rt-*`).
-
----
-
-## Production-сборка
-
-```bash
-npm run build    # next build (21 маршрут, проверка типов, оптимизация)
-npm start        # запуск собранного приложения (tsx server.ts)
-```
-
-Сборка пройдёт **без доступа к базе** — страницы, которые читают из Prisma, корректно обрабатывают ошибку подключения и показывают демо-данные. Для полноценной работы в production база должна быть доступна по `DATABASE_URL`.
+1. Open the same task in two browser windows (e.g. Chrome + Firefox).
+2. Start typing in one — the change appears in the other within ~100 ms.
+3. Other participants' cursors render with name and color (palette `tokens.css → --rt-*`).
 
 ---
 
-## Развёртывание на VPS
-
-Проект рассчитан на **Timeweb Cloud (Москва)** или любой VPS с Docker.
-
-### 1. Подготовить сервер
+## Production build
 
 ```bash
-# Ubuntu 22.04+
-sudo apt update && sudo apt install -y docker.io docker-compose-plugin
-sudo usermod -aG docker $USER
-# перезайдите в ssh после usermod
+npm run build    # next build (type-check, optimization)
+npm start        # run the built app (tsx server.ts)
 ```
 
-### 2. Склонировать репозиторий и создать `.env`
+The build runs **without a database** — pages that read from Prisma handle the connection error gracefully and show demo data. For real operation the database must be reachable via `DATABASE_URL`.
+
+---
+
+## Deployment
+
+The project is designed to run on **any VPS with Docker**. The full stack (app + PostgreSQL + Caddy) comes up with one command, and Caddy issues a Let's Encrypt certificate automatically.
 
 ```bash
-sudo mkdir -p /opt/taskflow && sudo chown $USER /opt/taskflow
-cd /opt/taskflow
-git clone https://github.com/<ваш-org>/taskflow .
+# on the server (Ubuntu 22.04+ with Docker installed)
+git clone <your-repo-url> taskflow && cd taskflow
 cp .env.example .env
-nano .env   # заполнить все обязательные и production-значения
-```
+nano .env   # fill in production values (see below)
 
-**В production `.env` обязательно:**
-
-- `BETTER_AUTH_URL=https://<ваш-домен>`
-- `DATABASE_URL=postgresql://taskflow:...@db:5432/taskflow` (**`db`**, а не `localhost` — имя сервиса в compose)
-- Сильный `POSTGRES_PASSWORD`
-- Реальные ключи Яндекс ID / ЮKassa / SMTP
-
-### 3. Настроить домен
-
-В DNS добавьте A-запись `taskflow.ru → <IP сервера>`. Caddy **автоматически** получит сертификат Let's Encrypt при первом запуске. Если домен другой — поправьте `Caddyfile`.
-
-### 4. Поднять стек
-
-```bash
-docker compose build
-docker compose up -d
-```
-
-Проверьте:
-
-```bash
-docker compose ps           # все сервисы up
-docker compose logs -f app  # нет ошибок
-curl -I https://taskflow.ru # 200 OK и валидный TLS
-```
-
-### 5. Применить миграции
-
-```bash
+docker compose up -d --build
 docker compose exec app npx prisma migrate deploy
-docker compose exec app npm run db:seed   # необязательно; только для демо-среды
+docker compose exec app npm run db:seed   # optional, demo data only
 ```
 
-### 6. Автоматическое развёртывание через GitHub Actions
+**Required in a production `.env`:**
 
-Готовый workflow — в [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). На каждый push в `main`:
+- `APP_DOMAIN=your-domain` (without `https://`) — Caddy reads it to obtain TLS.
+- `BETTER_AUTH_URL=https://your-domain` and `NEXT_PUBLIC_BETTER_AUTH_URL=https://your-domain`.
+- `DATABASE_URL=postgresql://taskflow:...@db:5432/taskflow` — host **`db`** (the compose service name), not `localhost`.
+- A strong `POSTGRES_PASSWORD`.
+- Real Yandex ID / YuKassa / SMTP keys if you use those integrations.
 
-1. Собирается Docker-образ и публикуется в GitHub Container Registry.
-2. По SSH на сервер выполняется `docker compose pull && docker compose up -d`.
+Point a DNS A-record at the server IP for `APP_DOMAIN` (and `www`). Caddy obtains the certificate on first start. Database backups: [`scripts/backup-db.sh`](scripts/backup-db.sh) runs `pg_dump` with rotation — schedule it via cron.
 
-**Добавьте в Secrets репозитория:**
-
-| Secret | Значение |
-| --- | --- |
-| `DEPLOY_HOST` | IP или домен сервера |
-| `DEPLOY_USER` | Пользователь для SSH (обычно `root` или `deploy`) |
-| `DEPLOY_SSH_KEY` | Приватный ключ для SSH (полный текст `.pem`) |
-
-В `docker-compose.yml` на сервере замените `build: .` на `image: ghcr.io/<ваш-org>/taskflow/taskflow:latest`, чтобы сервер не собирал образ сам.
-
-### 7. Резервное копирование
-
-Скрипт [`scripts/backup-db.sh`](scripts/backup-db.sh) делает `pg_dump` и ротирует копии старше 7 дней. Поставьте его в cron:
-
-```bash
-# crontab -e
-0 3 * * * cd /opt/taskflow && docker compose exec -T db /scripts/backup-db.sh
-```
-
-Для работы смонтируйте скрипт в контейнер БД или запускайте его из контейнера app (где есть `pg_dump`).
+> A detailed step-by-step VPS deployment guide (in Russian) lives in [DEPLOY.md](DEPLOY.md).
 
 ---
 
-## Что настраивает пользователь
+## Verification checklist
 
-Краткий чек-лист того, что **осталось сделать вам** перед боевой эксплуатацией:
+After `npm run dev`, check in order:
 
-### Обязательно
-
-- [ ] Скопировать `.env.example` → `.env` и заполнить все обязательные переменные.
-- [ ] Сгенерировать `BETTER_AUTH_SECRET` через `openssl rand -base64 32`.
-- [ ] Поднять PostgreSQL (локально через `docker compose up -d db` или managed-БД у провайдера).
-- [ ] Применить миграции (`npx prisma migrate dev` или `migrate deploy`).
-
-### Для входа через Яндекс ID
-
-- [ ] Зарегистрировать OAuth-приложение на <https://oauth.yandex.ru/client/new>.
-- [ ] Указать redirect URI: `https://<домен>/api/auth/callback/yandex`.
-- [ ] Скопировать Client ID и Secret в `.env`.
-- [ ] Запросить права `login:email` и `login:info`.
-
-### Для отправки magic link
-
-- [ ] Создать почтовый ящик `noreply@<домен>` (например, в Яндекс 360 для бизнеса).
-- [ ] Получить пароль приложения для SMTP.
-- [ ] Настроить SPF / DKIM / DMARC в DNS, иначе письма попадут в спам.
-
-### Для приёма платежей ЮKassa
-
-- [ ] Подписать договор с ЮKassa и активировать магазин.
-- [ ] В кабинете ЮKassa получить `shopId` и секретный ключ.
-- [ ] Добавить URL вебхука `https://<домен>/api/webhooks/yookassa` и подписаться на события `payment.succeeded`, `payment.canceled`.
-- [ ] Сохранить секрет вебхука в `YOOKASSA_WEBHOOK_SECRET`.
-
-### Для production-развёртывания
-
-- [ ] Купить домен и указать A-запись на IP VPS.
-- [ ] В `Caddyfile` заменить `taskflow.ru` на свой домен.
-- [ ] Проверить, что порты 80/443 открыты в firewall VPS.
-- [ ] Настроить GitHub Actions secrets (см. выше).
-- [ ] Включить cron для `scripts/backup-db.sh` и проверить запись в `/var/backups/taskflow/`.
-
-### Желательно
-
-- [ ] Настроить мониторинг (Grafana / Uptime Kuma) с пингом `/` и метриками контейнеров.
-- [ ] Подключить отправку ошибок в Sentry / Яндекс.Трекер.
-- [ ] Написать `docs/privacy.md` и страницу «Политика персональных данных» для соответствия 152-ФЗ (в коде сейчас заглушка на `#`).
-- [ ] Настроить ежеквартальную ротацию `BETTER_AUTH_SECRET` и ключей ЮKassa.
+1. The landing opens at <http://localhost:3000>.
+2. "Sign in" leads to `/login`.
+3. With Yandex ID configured, the button redirects to `oauth.yandex.ru`; otherwise the magic link is used (a console error without SMTP is fine).
+4. After sign-in, `/projects` shows 3 projects.
+5. Opening a project shows the kanban with 15 tasks.
+6. Dragging a task between columns persists (reload — the order holds).
+7. Opening a task shows the BlockNote editor.
+8. Two tabs show live text and cursor updates.
+9. A comment with `@mention` is sent and saved.
+10. `/admin/members` lists all members with roles.
+11. `npm run build` finishes without errors.
 
 ---
 
-## Проверочный лист
+## Troubleshooting
 
-После `npm run dev` проверьте по порядку:
+**`BETTER_AUTH_SECRET should be at least 32 characters`** — generate a new one: `openssl rand -base64 32`.
 
-1. [ ] Открывается лендинг <http://localhost:3000>.
-2. [ ] Кнопка «Войти» ведёт на `/login`.
-3. [ ] Если настроен Яндекс ID — клик на «Войти через Яндекс ID» уводит на `oauth.yandex.ru`; иначе — magic link (ошибка в консоли без SMTP допустима).
-4. [ ] После входа открывается `/projects` с 3 проектами.
-5. [ ] Переход в проект открывает канбан с 15 задачами.
-6. [ ] Перетаскивание задачи между колонками сохраняется (обновите страницу — порядок тот же).
-7. [ ] Клик/двойной клик на задаче открывает карточку с BlockNote.
-8. [ ] В двух вкладках видны живые обновления текста и курсоров.
-9. [ ] Комментарий с `@Мария Петрова` отправляется и сохраняется.
-10. [ ] В `/admin/members` видны все участники с ролями.
-11. [ ] На `/admin/billing` кнопка «Выбрать» ведёт на ЮKassa (если ключи настроены) или возвращает ошибку без них.
-12. [ ] `npm run build` завершается без ошибок.
+**`Can't reach database server at localhost:5432`** — PostgreSQL isn't running. `docker compose up -d db` and wait a few seconds.
+
+**Migration won't apply** — reset the dev DB (drops data): `npx prisma migrate reset --force && npm run db:seed`.
+
+**BlockNote doesn't render / empty task card** — ensure `@blocknote/mantine` is installed.
+
+**Magic-link emails don't arrive** — verify SMTP settings (use an app password) and set up SPF/DKIM/DMARC so mail isn't flagged as spam.
+
+**YuKassa webhook returns 403 "bad signature"** — `YOOKASSA_WEBHOOK_SECRET` doesn't match the secret in the YuKassa webhook settings.
 
 ---
 
-## Частые проблемы
-
-### `Error: your BETTER_AUTH_SECRET should be at least 32 characters`
-
-Короткий секрет. Сгенерируйте новый: `openssl rand -base64 32` и запишите в `.env`.
-
-### `Can't reach database server at localhost:5432`
-
-PostgreSQL не запущен. Поднимите: `docker compose up -d db` и подождите 3–5 секунд. Для проверки — `docker compose logs db | tail`.
-
-### Миграция не применяется
-
-```bash
-# Сбросить dev-БД и пересоздать (ВНИМАНИЕ: данные удалятся)
-npx prisma migrate reset --force
-npm run db:seed
-```
-
-### BlockNote не рендерится / пустой экран карточки задачи
-
-Убедитесь, что установлен `@blocknote/mantine` (см. `package.json`). Если нет — `npm install @blocknote/mantine`.
-
-### Не приходят письма magic link
-
-Проверьте, что SMTP-параметры корректны (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`). Для Яндекс.Почты нужно использовать **пароль приложения**, а не обычный пароль аккаунта. Также настройте SPF/DKIM/DMARC, чтобы письма не попадали в спам.
-
-### ЮKassa webhook возвращает 403 «bad signature»
-
-Секрет в `YOOKASSA_WEBHOOK_SECRET` не совпадает с секретом в настройках вебхука ЮKassa. Сгенерируйте новый и одновременно обновите в двух местах.
-
-### После `docker compose up` контейнер app падает с ошибкой Prisma
-
-База ещё не готова. В `docker-compose.yml` у сервиса `app` уже прописано `depends_on: { db: { condition: service_healthy } }` — убедитесь, что используете актуальную версию compose (≥ 2.12).
-
----
-
-## Структура проекта
+## Project structure
 
 ```
 taskflow/
 ├── prisma/
-│   ├── schema.prisma            # 15 моделей + 4 enum-а
-│   └── seed.ts                  # демо-данные
+│   ├── schema.prisma            # 15 models + 4 enums
+│   └── seed.ts                  # demo data
 ├── src/
 │   ├── app/                     # App Router
-│   │   ├── (auth)/              # /login, /register
+│   │   ├── (auth)/              # /login, /register, /onboarding
 │   │   ├── (app)/               # /projects, /my-tasks, /notifications, /settings, /chat, /search
-│   │   ├── (admin)/             # /admin, /admin/members, /admin/billing
-│   │   ├── (marketing)/pricing/ # публичная страница тарифов
-│   │   ├── m/                   # мобильный канбан (экран 9)
+│   │   ├── (admin)/             # /admin, /admin/members, /admin/billing, /admin/journal
+│   │   ├── (marketing)/         # pricing, legal pages
 │   │   └── api/
 │   │       ├── auth/[...all]/   # BetterAuth
-│   │       ├── collaboration/   # маркер для WebSocket
+│   │       ├── collaboration/   # WebSocket marker
 │   │       └── webhooks/yookassa/
 │   ├── components/
-│   │   ├── ui/                  # Button, Input, Avatar, Badge, Dialog, Dropdown, Tabs, Logo, ProjectIcon, EmptyState
-│   │   ├── icons/Icons.tsx      # собственный набор SVG
+│   │   ├── ui/                  # Button, Input, Avatar, Badge, Dialog, Dropdown, Tabs, ...
 │   │   ├── nav/                 # Sidebar, TopBar
 │   │   ├── kanban/              # Board, Column, TaskCard
 │   │   └── task/                # CollaborativeEditor, CommentList, VersionHistory
-│   ├── lib/                     # auth, prisma, session, yookassa, yjs-provider
+│   ├── lib/                     # auth, prisma, session, yookassa, yjs-provider, theme
 │   ├── server/
 │   │   ├── actions/             # tasks, projects, comments, members, billing
-│   │   ├── ws-broadcast.ts      # внутрипроцессная шина событий
-│   │   └── ws-handler.ts        # upgrade-обработчик y-websocket
+│   │   ├── ws-broadcast.ts      # in-process event bus
+│   │   └── ws-handler.ts        # y-websocket upgrade handler
 │   └── styles/
-│       ├── globals.css          # сбросы + импорт tokens
-│       └── tokens.css           # дизайн-токены (цвета, радиусы, тени)
+│       ├── globals.css
+│       └── tokens.css           # design tokens (colors, radii, shadows)
 ├── scripts/
-│   └── backup-db.sh             # pg_dump с ротацией
-├── .github/workflows/deploy.yml # CI/CD
-├── server.ts                    # custom Next.js сервер с WebSocket
-├── Dockerfile                   # multi-stage сборка
+│   └── backup-db.sh             # pg_dump with rotation
+├── server.ts                    # custom Next.js server with WebSocket
+├── Dockerfile                   # multi-stage build
 ├── docker-compose.yml           # app + db + caddy
-├── Caddyfile                    # reverse-proxy + авто-HTTPS
-├── .env.example                 # шаблон окружения
+├── Caddyfile                    # reverse proxy + auto-HTTPS
+├── render.yaml                  # Render Blueprint (free demo)
+├── .env.example
 ├── next.config.ts
 ├── tsconfig.json
 └── package.json
@@ -481,16 +361,17 @@ taskflow/
 
 ---
 
-## Команды npm
+## npm commands
 
-| Команда | Что делает |
+| Command | What it does |
 | --- | --- |
-| `npm install` | Установить зависимости |
-| `npm run dev` | Dev-сервер с WebSocket на `:3000` |
-| `npm run build` | Production-сборка Next.js |
-| `npm start` | Запуск собранного приложения |
-| `npm run lint` | Проверка ESLint |
-| `npm run db:generate` | Сгенерировать Prisma Client |
-| `npm run db:migrate` | Применить миграции (dev) |
-| `npm run db:seed` | Залить демо-данные |
-| `npm run db:studio` | Prisma Studio на `:5555` |
+| `npm install` | Install dependencies |
+| `npm run dev` | Dev server with WebSocket on `:3000` |
+| `npm run build` | Production Next.js build |
+| `npm start` | Run the built app |
+| `npm run lint` | ESLint |
+| `npm test` | Run the Vitest suite |
+| `npm run db:generate` | Generate Prisma Client |
+| `npm run db:migrate` | Apply migrations (dev) |
+| `npm run db:seed` | Load demo data |
+| `npm run db:studio` | Prisma Studio on `:5555` |
